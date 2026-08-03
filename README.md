@@ -41,6 +41,7 @@ bucket for receipt images. It is safe to run more than once.
 
 ## Project status
 
+### MVP Features (Complete)
 - [x] Step 1 — Project scaffold (Next.js + TypeScript + Tailwind + PWA manifest)
 - [x] Step 2 — Supabase connection + database schema
 - [x] Step 3 — Auth (login/signup)
@@ -50,3 +51,66 @@ bucket for receipt images. It is safe to run more than once.
 - [x] Step 7 — Dashboard / receipt list
 - [x] Step 8 — Receipt detail page
 - [x] Step 9 — Monthly spending chart
+
+### Extended Features (Complete)
+- [x] Framework upgrade to Next.js 16 with async cookies and Promise params
+- [x] Edit receipts: modify store name, date, items, and totals after creation
+- [x] Store analytics: top 5 stores by spending + "Other" rollup in summary page
+- [x] Live deployment to Vercel with environment variable configuration
+
+## Troubleshooting
+
+### OCR extraction fails with "Could not reach the AI service"
+
+**Possible causes:**
+
+1. **Environment variables not set** on Vercel
+   - Go to Vercel project → Settings → Environment Variables
+   - Ensure `OCR_API_KEY`, `OCR_BASE_URL`, and `OCR_MODEL` are all set
+   - Redeploy after adding/updating env vars
+
+2. **Network connectivity** (geolocation/network policy)
+   - If using KKU AI gateway, it may not be accessible from Vercel's US-based infrastructure
+   - Try switching to OpenAI API or another provider accessible from Vercel
+   - Check your OCR provider's IP whitelisting or network restrictions
+
+3. **API timeout** (model taking >50 seconds)
+   - The endpoint has a 50-second timeout before the serverless function itself times out at 60s
+   - Large or complex receipts may exceed this; smaller images process faster
+   - Try compressing or cropping the receipt image
+
+4. **Supabase storage quota exceeded**
+   - Free tier includes 1 GB of storage (database + images combined)
+   - Check Supabase dashboard → Storage → Buckets → `receipts` for usage
+   - Upgrade to a paid plan or delete old receipt images to free space
+
+### Login doesn't work / "Authentication error"
+
+1. **Missing Supabase configuration**
+   - Verify `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in `.env.local`
+   - On Vercel, check these are set in Environment Variables (Vercel project → Settings)
+
+2. **Site URL mismatch** (Vercel deployment)
+   - Go to Supabase → Authentication → URL Configuration
+   - Add your Vercel domain (e.g., `https://bill-orc-xyz.vercel.app`) as a Redirect URL
+   - Add it to the Site URL as well if using custom domain
+
+### Deployment to Vercel
+
+1. Connect your GitHub repository to Vercel
+2. Set the **Production Branch** to `claude/receipt-ocr-app-cy20l3`
+3. Set **Framework Preset** to `Next.js`
+4. Add Environment Variables in Vercel project settings:
+   - `OCR_API_KEY`
+   - `OCR_BASE_URL`
+   - `OCR_MODEL`
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+5. Redeploy if you add or update env vars
+
+### Light theme looks dark on dark-mode devices
+
+The app enforces light mode throughout. If text appears dark/unreadable:
+- Check your device's system theme setting
+- The app uses explicit white backgrounds and dark text to override system preferences
+- No browser darkening is applied; the issue should only appear if system dark mode is forcing an override
