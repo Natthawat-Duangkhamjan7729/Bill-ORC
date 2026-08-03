@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import type { OcrResult } from "@/app/api/ocr/route";
+import type { OcrResult } from "@/lib/types";
 
 type ItemRow = {
   item_name: string;
@@ -12,15 +12,18 @@ type ItemRow = {
   total_price: string;
 };
 
-// Editable form pre-filled with OCR results. The user fixes any mistakes,
-// then Save uploads the photo to Storage and writes receipt + items to the DB.
+// Editable receipt form used in two modes:
+// - New (imageBlob set): Save uploads the photo, then inserts receipt + items.
+// - Edit (receiptId set): Save updates the receipt and replaces its items.
 export default function ReceiptForm({
   initial,
   imageBlob,
+  receiptId,
   onCancel,
 }: {
   initial: OcrResult;
-  imageBlob: Blob;
+  imageBlob?: Blob;
+  receiptId?: string;
   onCancel: () => void;
 }) {
   const router = useRouter();
@@ -77,41 +80,70 @@ export default function ReceiptForm({
         return;
       }
 
-      // 1. Upload the photo to the private "receipts" storage bucket.
-      //    Path starts with the user id so storage rules allow access.
-      const imagePath = `${user.id}/${crypto.randomUUID()}.jpg`;
-      const { error: uploadError } = await supabase.storage
-        .from("receipts")
-        .upload(imagePath, imageBlob, { contentType: "image/jpeg" });
-      if (uploadError) {
-        setError(`Could not upload the image: ${uploadError.message}`);
-        return;
+      const fields = {
+        store_name: storeName.trim(),
+        purchase_date: purchaseDate || null,
+        subtotal: strToNum(subtotal),
+        tax_amount: strToNum(taxAmount),
+        total_amount: strToNum(totalAmount),
+      };
+
+      let savedReceiptId: string;
+
+      if (receiptId) {
+        // Edit mode: update the existing receipt (photo stays unchanged).
+        const { error: updateError } = await supabase
+          .from("receipts")
+          .update(fields)
+          .eq("id", receiptId);
+        if (updateError) {
+          setError(`Could not save changes: ${updateError.message}`);
+          return;
+        }
+
+        // Replace the items with the rows currently in the form.
+        const { error: clearError } = await supabase
+          .from("receipt_items")
+          .delete()
+          .eq("receipt_id", receiptId);
+        if (clearError) {
+          setError(`Could not update items: ${clearError.message}`);
+          return;
+        }
+        savedReceiptId = receiptId;
+      } else {
+        // New mode: upload the photo to the private "receipts" bucket first.
+        // Path starts with the user id so storage rules allow access.
+        if (!imageBlob) {
+          setError("No image to save — please start over.");
+          return;
+        }
+        const imagePath = `${user.id}/${crypto.randomUUID()}.jpg`;
+        const { error: uploadError } = await supabase.storage
+          .from("receipts")
+          .upload(imagePath, imageBlob, { contentType: "image/jpeg" });
+        if (uploadError) {
+          setError(`Could not upload the image: ${uploadError.message}`);
+          return;
+        }
+
+        const { data: receipt, error: receiptError } = await supabase
+          .from("receipts")
+          .insert({ ...fields, user_id: user.id, image_url: imagePath })
+          .select("id")
+          .single();
+        if (receiptError) {
+          setError(`Could not save the receipt: ${receiptError.message}`);
+          return;
+        }
+        savedReceiptId = receipt.id;
       }
 
-      // 2. Save the receipt row.
-      const { data: receipt, error: receiptError } = await supabase
-        .from("receipts")
-        .insert({
-          user_id: user.id,
-          store_name: storeName.trim(),
-          purchase_date: purchaseDate || null,
-          subtotal: strToNum(subtotal),
-          tax_amount: strToNum(taxAmount),
-          total_amount: strToNum(totalAmount),
-          image_url: imagePath,
-        })
-        .select("id")
-        .single();
-      if (receiptError) {
-        setError(`Could not save the receipt: ${receiptError.message}`);
-        return;
-      }
-
-      // 3. Save the item rows (skip blank ones).
+      // Save the item rows (skip blank ones).
       const itemRows = items
         .filter((item) => item.item_name.trim() !== "")
         .map((item) => ({
-          receipt_id: receipt.id,
+          receipt_id: savedReceiptId,
           item_name: item.item_name.trim(),
           quantity: strToNum(item.quantity) ?? 1,
           unit_price: strToNum(item.unit_price),
@@ -123,13 +155,13 @@ export default function ReceiptForm({
           .insert(itemRows);
         if (itemsError) {
           setError(
-            `Receipt saved, but items failed: ${itemsError.message}. You can delete it and try again.`
+            `Receipt saved, but items failed: ${itemsError.message}. Please try saving again.`
           );
           return;
         }
       }
 
-      router.push("/dashboard");
+      router.push(receiptId ? `/receipts/${receiptId}` : "/dashboard");
       router.refresh();
     } finally {
       setSaving(false);
@@ -142,7 +174,9 @@ export default function ReceiptForm({
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-lg border border-teal-300 bg-teal-50 px-4 py-3 text-sm text-teal-800">
-        Check the extracted data below, fix anything the AI misread, then save.
+        {receiptId
+          ? "Edit the receipt below, then save your changes."
+          : "Check the extracted data below, fix anything the AI misread, then save."}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -288,7 +322,7 @@ export default function ReceiptForm({
           disabled={saving}
           className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 font-medium text-gray-600 transition hover:bg-gray-50 disabled:opacity-50"
         >
-          Start over
+          {receiptId ? "Cancel" : "Start over"}
         </button>
         <button
           type="button"
@@ -296,7 +330,7 @@ export default function ReceiptForm({
           disabled={saving}
           className="flex-1 rounded-lg bg-teal-600 px-4 py-2.5 font-medium text-white transition hover:bg-teal-700 disabled:opacity-50"
         >
-          {saving ? "Saving…" : "Save receipt"}
+          {saving ? "Saving…" : receiptId ? "Save changes" : "Save receipt"}
         </button>
       </div>
     </div>

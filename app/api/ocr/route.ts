@@ -1,24 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import type { OcrResult } from "@/lib/types";
 
 // Allow up to 60s — vision models can take a while on large receipts.
 export const maxDuration = 60;
-
-// The shape we ask the AI to return. Field names match the database columns
-// so the confirmation form (step 6) can save results directly.
-export type OcrResult = {
-  store_name: string | null;
-  purchase_date: string | null; // YYYY-MM-DD
-  items: {
-    item_name: string;
-    quantity: number;
-    unit_price: number | null;
-    total_price: number | null;
-  }[];
-  subtotal: number | null;
-  tax_amount: number | null;
-  total_amount: number | null;
-};
 
 const EXTRACTION_PROMPT = `You are a receipt-reading assistant. Extract the purchase data from this receipt photo. The receipt may be in Thai or English.
 

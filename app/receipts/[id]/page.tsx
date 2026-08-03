@@ -68,7 +68,15 @@ export default async function ReceiptDetailPage({
         <Link href="/dashboard" className="text-sm text-teal-700 hover:underline">
           ← Back to dashboard
         </Link>
-        <DeleteButton receiptId={receipt.id} imagePath={receipt.image_url} />
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/receipts/${receipt.id}/edit`}
+            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 transition hover:bg-gray-50"
+          >
+            Edit
+          </Link>
+          <DeleteButton receiptId={receipt.id} imagePath={receipt.image_url} />
+        </div>
       </header>
 
       <div>

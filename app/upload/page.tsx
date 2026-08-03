@@ -3,8 +3,8 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { prepareImage, type PreparedImage } from "@/lib/image";
-import type { OcrResult } from "@/app/api/ocr/route";
-import ReceiptForm from "./receipt-form";
+import type { OcrResult } from "@/lib/types";
+import ReceiptForm from "@/components/receipt-form";
 
 export default function UploadPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
