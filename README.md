@@ -9,7 +9,9 @@ purchase date, itemized purchases, and totals.
 - **Next.js 14** (App Router, TypeScript) — the web framework
 - **Tailwind CSS** — styling
 - **Supabase** — database (Postgres), authentication, and image storage
-- **Claude API** — vision-based OCR for receipt data extraction
+- **AI vision OCR** — receipt data extraction through any OpenAI-compatible
+  chat-completions API (configured via `OCR_BASE_URL` / `OCR_MODEL` /
+  `OCR_API_KEY` in `.env.local`; works with the KKU gateway, OpenAI, etc.)
 
 ## Running the app locally
 
@@ -43,7 +45,7 @@ bucket for receipt images. It is safe to run more than once.
 - [x] Step 2 — Supabase connection + database schema
 - [x] Step 3 — Auth (login/signup)
 - [x] Step 4 — Receipt upload page
-- [ ] Step 5 — OCR API route (Claude vision)
+- [x] Step 5 — OCR API route (AI vision via OpenAI-compatible API)
 - [ ] Step 6 — Editable confirmation form + save
 - [ ] Step 7 — Dashboard / receipt list
 - [ ] Step 8 — Receipt detail page

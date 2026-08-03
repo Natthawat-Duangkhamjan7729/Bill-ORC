@@ -3,11 +3,14 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { prepareImage, type PreparedImage } from "@/lib/image";
+import type { OcrResult } from "@/app/api/ocr/route";
 
 export default function UploadPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [image, setImage] = useState<PreparedImage | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [extracting, setExtracting] = useState(false);
+  const [result, setResult] = useState<OcrResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -15,6 +18,7 @@ export default function UploadPage() {
     if (!file) return;
 
     setError(null);
+    setResult(null);
     setProcessing(true);
     try {
       setImage(await prepareImage(file));
@@ -25,6 +29,38 @@ export default function UploadPage() {
     } finally {
       setProcessing(false);
     }
+  }
+
+  async function handleExtract() {
+    if (!image) return;
+    setError(null);
+    setExtracting(true);
+    try {
+      const response = await fetch("/api/ocr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: image.dataUrl }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error ?? `OCR failed (${response.status})`);
+        return;
+      }
+      setResult(data);
+    } catch (err) {
+      setError(
+        `Could not reach the OCR service: ${err instanceof Error ? err.message : String(err)}`
+      );
+    } finally {
+      setExtracting(false);
+    }
+  }
+
+  function reset() {
+    setImage(null);
+    setResult(null);
+    setError(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   return (
@@ -69,7 +105,7 @@ export default function UploadPage() {
         </p>
       )}
 
-      {image && (
+      {image && !result && (
         <div className="flex flex-col gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -81,28 +117,93 @@ export default function UploadPage() {
           <div className="flex gap-3">
             <button
               type="button"
-              onClick={() => {
-                setImage(null);
-                if (fileInputRef.current) fileInputRef.current.value = "";
-              }}
-              className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 font-medium text-gray-600 transition hover:bg-gray-50"
+              onClick={reset}
+              disabled={extracting}
+              className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 font-medium text-gray-600 transition hover:bg-gray-50 disabled:opacity-50"
             >
               Choose another
             </button>
             <button
               type="button"
-              disabled
-              title="OCR extraction arrives in step 5"
-              className="flex-1 cursor-not-allowed rounded-lg bg-teal-600 px-4 py-2.5 font-medium text-white opacity-50"
+              onClick={handleExtract}
+              disabled={extracting}
+              className="flex-1 rounded-lg bg-teal-600 px-4 py-2.5 font-medium text-white transition hover:bg-teal-700 disabled:opacity-50"
             >
-              Extract data (step 5)
+              {extracting ? "Reading receipt…" : "Extract data"}
             </button>
           </div>
 
-          <p className="text-center text-xs text-gray-400">
-            Step 4 complete ✅ — preview works. The Extract button comes alive in
-            step 5.
-          </p>
+          {extracting && (
+            <p className="text-center text-xs text-gray-400">
+              The AI is reading your receipt — this usually takes 5–20 seconds.
+            </p>
+          )}
+        </div>
+      )}
+
+      {result && (
+        <div className="flex flex-col gap-4">
+          <div className="rounded-lg border border-teal-300 bg-teal-50 px-4 py-3 text-sm text-teal-800">
+            Step 5 complete ✅ — data extracted. In step 6 this becomes an
+            editable form you can correct and save.
+          </div>
+
+          <div className="rounded-xl border border-gray-200 p-4">
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+              <dt className="text-gray-500">Store</dt>
+              <dd className="font-medium">{result.store_name ?? "—"}</dd>
+              <dt className="text-gray-500">Date</dt>
+              <dd className="font-medium">{result.purchase_date ?? "—"}</dd>
+              <dt className="text-gray-500">Subtotal</dt>
+              <dd className="font-medium">{result.subtotal ?? "—"}</dd>
+              <dt className="text-gray-500">Tax</dt>
+              <dd className="font-medium">{result.tax_amount ?? "—"}</dd>
+              <dt className="text-gray-500">Total</dt>
+              <dd className="font-medium">{result.total_amount ?? "—"}</dd>
+            </dl>
+
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200 text-left text-gray-500">
+                    <th className="py-1.5 pr-2 font-medium">Item</th>
+                    <th className="py-1.5 pr-2 text-right font-medium">Qty</th>
+                    <th className="py-1.5 pr-2 text-right font-medium">Unit</th>
+                    <th className="py-1.5 text-right font-medium">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.items.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="py-3 text-center text-gray-400">
+                        No items detected
+                      </td>
+                    </tr>
+                  )}
+                  {result.items.map((item, i) => (
+                    <tr key={i} className="border-b border-gray-100">
+                      <td className="py-1.5 pr-2">{item.item_name}</td>
+                      <td className="py-1.5 pr-2 text-right">{item.quantity}</td>
+                      <td className="py-1.5 pr-2 text-right">
+                        {item.unit_price ?? "—"}
+                      </td>
+                      <td className="py-1.5 text-right">
+                        {item.total_price ?? "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={reset}
+            className="rounded-lg border border-gray-300 px-4 py-2.5 font-medium text-gray-600 transition hover:bg-gray-50"
+          >
+            Try another receipt
+          </button>
         </div>
       )}
     </main>
