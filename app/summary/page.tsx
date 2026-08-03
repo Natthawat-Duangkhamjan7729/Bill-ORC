@@ -16,7 +16,7 @@ function formatBaht(n: number): string {
 }
 
 export default async function SummaryPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

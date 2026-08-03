@@ -44,7 +44,7 @@ Rules:
 
 export async function POST(request: Request) {
   // Only logged-in users may call this (it spends API quota).
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

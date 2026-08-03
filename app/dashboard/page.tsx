@@ -22,9 +22,9 @@ function formatDate(d: string | null): string {
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: { store?: string; from?: string; to?: string };
+  searchParams: Promise<{ store?: string; from?: string; to?: string }>;
 }) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -33,9 +33,10 @@ export default async function DashboardPage({
     redirect("/login");
   }
 
-  const store = searchParams.store?.trim() ?? "";
-  const from = searchParams.from ?? "";
-  const to = searchParams.to ?? "";
+  const { store: rawStore, from: rawFrom, to: rawTo } = await searchParams;
+  const store = rawStore?.trim() ?? "";
+  const from = rawFrom ?? "";
+  const to = rawTo ?? "";
   const hasFilter = store !== "" || from !== "" || to !== "";
 
   // Newest purchases first; receipts without a date go last.

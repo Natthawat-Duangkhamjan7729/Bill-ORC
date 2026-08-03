@@ -22,9 +22,10 @@ function formatDate(d: string | null): string {
 export default async function ReceiptDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const supabase = createClient();
+  const { id } = await params;
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -38,7 +39,7 @@ export default async function ReceiptDetailPage({
     .select(
       "id, store_name, purchase_date, subtotal, tax_amount, total_amount, image_url, created_at"
     )
-    .eq("id", params.id)
+    .eq("id", id)
     .maybeSingle();
 
   if (!receipt) {

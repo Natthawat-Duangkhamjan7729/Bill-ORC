@@ -23,7 +23,7 @@ async function checkSupabase(): Promise<CheckResult> {
   }
 
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { error } = await supabase
       .from("receipts")
       .select("id", { count: "exact", head: true });
