@@ -2,16 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* The app is designed light-only for now. "color-scheme: light" also keeps
+   native controls (date picker, scrollbars) light on dark-mode devices. */
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  color-scheme: light;
 }
 
 body {

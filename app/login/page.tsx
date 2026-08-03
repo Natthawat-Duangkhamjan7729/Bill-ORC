@@ -80,7 +80,7 @@ export default function LoginPage() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2.5 text-base outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-base text-gray-900 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
             placeholder="you@example.com"
           />
         </label>
@@ -94,7 +94,7 @@ export default function LoginPage() {
             autoComplete={mode === "login" ? "current-password" : "new-password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2.5 text-base outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-base text-gray-900 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
             placeholder="At least 6 characters"
           />
         </label>

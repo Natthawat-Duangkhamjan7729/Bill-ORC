@@ -137,7 +137,7 @@ export default function ReceiptForm({
   }
 
   const inputClass =
-    "w-full rounded-lg border border-gray-300 px-2.5 py-2 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200";
+    "w-full rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-sm text-gray-900 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200";
 
   return (
     <div className="flex flex-col gap-4">
