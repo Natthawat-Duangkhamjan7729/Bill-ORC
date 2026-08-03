@@ -47,6 +47,6 @@ bucket for receipt images. It is safe to run more than once.
 - [x] Step 4 — Receipt upload page
 - [x] Step 5 — OCR API route (AI vision via OpenAI-compatible API)
 - [x] Step 6 — Editable confirmation form + save
-- [ ] Step 7 — Dashboard / receipt list
+- [x] Step 7 — Dashboard / receipt list
 - [ ] Step 8 — Receipt detail page
 - [ ] Step 9 — Monthly spending chart
