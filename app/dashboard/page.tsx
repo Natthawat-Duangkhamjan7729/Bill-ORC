@@ -66,12 +66,20 @@ export default async function DashboardPage({
         <LogoutButton />
       </header>
 
-      <Link
-        href="/upload"
-        className="rounded-lg bg-teal-600 px-4 py-2.5 text-center font-medium text-white transition hover:bg-teal-700"
-      >
-        + Add receipt
-      </Link>
+      <div className="flex gap-2">
+        <Link
+          href="/upload"
+          className="flex-1 rounded-lg bg-teal-600 px-4 py-2.5 text-center font-medium text-white transition hover:bg-teal-700"
+        >
+          + Add receipt
+        </Link>
+        <Link
+          href="/summary"
+          className="flex-1 rounded-lg border border-teal-600 px-4 py-2.5 text-center font-medium text-teal-700 transition hover:bg-teal-50"
+        >
+          📊 Summary
+        </Link>
+      </div>
 
       {/* Search: a plain GET form — filters appear in the URL, so results
           are shareable and the back button works. */}
