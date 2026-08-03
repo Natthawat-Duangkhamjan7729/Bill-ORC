@@ -42,12 +42,24 @@ export default function UploadPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image: image.dataUrl }),
       });
-      const data = await response.json();
-      if (!response.ok) {
-        setError(data.error ?? `OCR failed (${response.status})`);
+
+      // Read as text first: server errors (timeouts, size limits) come back
+      // as plain text or HTML, and parsing those as JSON hides the real cause.
+      const raw = await response.text();
+      let data: { error?: string } | null = null;
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        setError(
+          `Server error ${response.status}: ${raw.replace(/<[^>]*>/g, " ").trim().slice(0, 200) || "(empty reply)"}`
+        );
         return;
       }
-      setResult(data);
+      if (!response.ok || !data) {
+        setError(data?.error ?? `OCR failed (${response.status})`);
+        return;
+      }
+      setResult(data as never);
     } catch (err) {
       setError(
         `Could not reach the OCR service: ${err instanceof Error ? err.message : String(err)}`

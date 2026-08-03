@@ -64,26 +64,43 @@ export async function POST(request: Request) {
     );
   }
 
-  const aiResponse = await fetch(`${baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      stream: false,
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: EXTRACTION_PROMPT },
-            { type: "image_url", image_url: { url: image } },
-          ],
-        },
-      ],
-    }),
-  });
+  let aiResponse: Response;
+  try {
+    aiResponse = await fetch(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      // Give up before the serverless function itself is killed (60s),
+      // so the user gets a real error message instead of a platform timeout.
+      signal: AbortSignal.timeout(50_000),
+      body: JSON.stringify({
+        model,
+        stream: false,
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: EXTRACTION_PROMPT },
+              { type: "image_url", image_url: { url: image } },
+            ],
+          },
+        ],
+      }),
+    });
+  } catch (e) {
+    const reason =
+      e instanceof Error && e.name === "TimeoutError"
+        ? "the AI service took more than 50 seconds to answer"
+        : e instanceof Error
+          ? e.message
+          : String(e);
+    return NextResponse.json(
+      { error: `Could not reach the AI service from the server: ${reason}` },
+      { status: 502 }
+    );
+  }
 
   if (!aiResponse.ok) {
     const detail = await aiResponse.text();
