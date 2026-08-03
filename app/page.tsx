@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
 // Re-check the connection on every page load instead of at build time.
@@ -79,6 +80,13 @@ export default async function Home() {
           {check.hint && <p className="mt-1 text-xs">{check.hint}</p>}
         </div>
       </div>
+
+      <Link
+        href="/login"
+        className="rounded-lg bg-teal-600 px-6 py-2.5 font-medium text-white transition hover:bg-teal-700"
+      >
+        Get started
+      </Link>
     </main>
   );
 }
