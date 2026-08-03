@@ -15,6 +15,10 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
+  const { count } = await supabase
+    .from("receipts")
+    .select("id", { count: "exact", head: true });
+
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-6 p-6">
       <header className="flex items-center justify-between">
@@ -39,7 +43,8 @@ export default async function DashboardPage() {
       </Link>
 
       <p className="text-gray-500">
-        Your saved receipts will appear here (coming in step 7).
+        You have <strong>{count ?? 0}</strong> saved receipt
+        {(count ?? 0) === 1 ? "" : "s"}. The full list arrives in step 7.
       </p>
     </main>
   );
