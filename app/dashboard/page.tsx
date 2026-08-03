@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import LogoutButton from "./logout-button";
@@ -30,8 +31,15 @@ export default async function DashboardPage() {
         Step 3 complete ✅ Logged in as <strong>{user.email}</strong>
       </div>
 
+      <Link
+        href="/upload"
+        className="rounded-lg bg-teal-600 px-4 py-2.5 text-center font-medium text-white transition hover:bg-teal-700"
+      >
+        + Add receipt
+      </Link>
+
       <p className="text-gray-500">
-        Your receipts will appear here. Next step: uploading a receipt photo.
+        Your saved receipts will appear here (coming in step 7).
       </p>
     </main>
   );

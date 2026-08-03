@@ -42,7 +42,7 @@ bucket for receipt images. It is safe to run more than once.
 - [x] Step 1 — Project scaffold (Next.js + TypeScript + Tailwind + PWA manifest)
 - [x] Step 2 — Supabase connection + database schema
 - [x] Step 3 — Auth (login/signup)
-- [ ] Step 4 — Receipt upload page
+- [x] Step 4 — Receipt upload page
 - [ ] Step 5 — OCR API route (Claude vision)
 - [ ] Step 6 — Editable confirmation form + save
 - [ ] Step 7 — Dashboard / receipt list
