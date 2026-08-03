@@ -52,14 +52,17 @@ export async function POST(request: Request) {
 
   let image: string;
   try {
-    const body = await request.json();
-    image = body.image;
-    if (typeof image !== "string" || !image.startsWith("data:image/")) {
+    const formData = await request.formData();
+    const file = formData.get("image");
+    if (!(file instanceof Blob)) {
       throw new Error("bad image");
     }
+    const bytes = Buffer.from(await file.arrayBuffer());
+    const mimeType = file.type || "image/jpeg";
+    image = `data:${mimeType};base64,${bytes.toString("base64")}`;
   } catch {
     return NextResponse.json(
-      { error: "Send JSON like { image: 'data:image/jpeg;base64,...' }" },
+      { error: "Send the photo as multipart form data under the 'image' field" },
       { status: 400 }
     );
   }

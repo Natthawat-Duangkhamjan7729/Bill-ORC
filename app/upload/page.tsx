@@ -37,10 +37,15 @@ export default function UploadPage() {
     setError(null);
     setExtracting(true);
     try {
+      // Sent as binary form data rather than a base64 JSON string — large
+      // JSON bodies can trip a WebKit/Safari bug that throws a cryptic
+      // "string did not match the expected pattern" error before the
+      // request even reaches the server.
+      const formData = new FormData();
+      formData.append("image", image.ocrBlob, "receipt.jpg");
       const response = await fetch("/api/ocr", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: image.dataUrl }),
+        body: formData,
       });
 
       // Read as text first: server errors (timeouts, size limits) come back

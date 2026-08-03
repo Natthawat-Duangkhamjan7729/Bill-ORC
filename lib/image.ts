@@ -9,8 +9,9 @@ const STORE_MAX_DIMENSION = 1100;
 const STORE_JPEG_QUALITY = 0.7;
 
 export type PreparedImage = {
-  blob: Blob;
-  dataUrl: string; // for previewing in an <img> tag and for the OCR API
+  blob: Blob; // smaller version, for long-term storage
+  ocrBlob: Blob; // sharper version, sent to the OCR API as binary form data
+  dataUrl: string; // for previewing in an <img> tag
 };
 
 function drawScaled(
@@ -38,13 +39,19 @@ export async function prepareImage(file: File): Promise<PreparedImage> {
 
   const dataUrl = ocrCanvas.toDataURL("image/jpeg", OCR_JPEG_QUALITY);
 
-  const blob = await new Promise<Blob>((resolve, reject) => {
-    storeCanvas.toBlob(
-      (b) => (b ? resolve(b) : reject(new Error("Could not process image"))),
-      "image/jpeg",
-      STORE_JPEG_QUALITY
-    );
-  });
+  const toBlob = (canvas: HTMLCanvasElement, quality: number) =>
+    new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (b) => (b ? resolve(b) : reject(new Error("Could not process image"))),
+        "image/jpeg",
+        quality
+      );
+    });
 
-  return { blob, dataUrl };
+  const [blob, ocrBlob] = await Promise.all([
+    toBlob(storeCanvas, STORE_JPEG_QUALITY),
+    toBlob(ocrCanvas, OCR_JPEG_QUALITY),
+  ]);
+
+  return { blob, ocrBlob, dataUrl };
 }
