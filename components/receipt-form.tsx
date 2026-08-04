@@ -21,11 +21,17 @@ export default function ReceiptForm({
   imageBlob,
   receiptId,
   onCancel,
+  onSaved,
+  cancelLabel,
 }: {
   initial: OcrResult;
   imageBlob?: Blob;
   receiptId?: string;
   onCancel: () => void;
+  // When set, called after a successful save instead of navigating away —
+  // used by batch upload to advance to the next receipt in the queue.
+  onSaved?: () => void;
+  cancelLabel?: string;
 }) {
   const router = useRouter();
   const [storeName, setStoreName] = useState(initial.store_name ?? "");
@@ -164,8 +170,12 @@ export default function ReceiptForm({
         }
       }
 
-      router.push(receiptId ? `/receipts/${receiptId}` : "/dashboard");
-      router.refresh();
+      if (onSaved) {
+        onSaved();
+      } else {
+        router.push(receiptId ? `/receipts/${receiptId}` : "/dashboard");
+        router.refresh();
+      }
     } finally {
       setSaving(false);
     }
@@ -342,7 +352,7 @@ export default function ReceiptForm({
           disabled={saving}
           className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 font-medium text-gray-600 transition hover:bg-gray-50 disabled:opacity-50"
         >
-          {receiptId ? "Cancel" : "Start over"}
+          {cancelLabel ?? (receiptId ? "Cancel" : "Start over")}
         </button>
         <button
           type="button"

@@ -62,6 +62,8 @@ bucket for receipt images. It is safe to run more than once.
       breakdown on the summary page
 - [x] Sales logging (`/sales`): quick daily income entry, no OCR needed
 - [x] Profit & loss (`/profit`): monthly income vs expense chart and table
+- [x] Batch scanning: upload several receipt photos at once; OCR runs as a
+      queue while you review finished ones (retry / manual entry / skip per photo)
 
 ## Troubleshooting
 
