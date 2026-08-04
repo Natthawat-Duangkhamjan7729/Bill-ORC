@@ -71,9 +71,13 @@ export async function POST(request: Request) {
     );
   }
 
-  let aiResponse: Response;
+  // Ask for a STREAMING response. Long receipts make the model write for
+  // a minute or more; with a non-streaming request the connection sits
+  // silent the whole time and the gateway's proxies drop it ("fetch
+  // failed"). Streaming keeps bytes flowing, so the connection stays up.
+  let text: string;
   try {
-    aiResponse = await fetch(`${baseUrl}/chat/completions`, {
+    const aiResponse = await fetch(`${baseUrl}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -81,10 +85,10 @@ export async function POST(request: Request) {
       },
       // Give up before the serverless function itself is killed, so the
       // user gets a real error message instead of a platform timeout.
-      signal: AbortSignal.timeout(120_000),
+      signal: AbortSignal.timeout(240_000),
       body: JSON.stringify({
         model,
-        stream: false,
+        stream: true,
         messages: [
           {
             role: "user",
@@ -96,10 +100,46 @@ export async function POST(request: Request) {
         ],
       }),
     });
+
+    if (!aiResponse.ok) {
+      const detail = await aiResponse.text();
+      return NextResponse.json(
+        {
+          error: `AI service error (${aiResponse.status}): ${detail.slice(0, 300)}`,
+        },
+        { status: 502 }
+      );
+    }
+
+    const raw = await aiResponse.text();
+    const contentType = aiResponse.headers.get("content-type") ?? "";
+    if (contentType.includes("event-stream") || raw.startsWith("data:")) {
+      // Server-sent events: one "data: {json}" line per token chunk.
+      let assembled = "";
+      for (const line of raw.split("\n")) {
+        const payload = line.trim().replace(/^data:\s*/, "");
+        if (!payload || payload === "[DONE]" || !line.trim().startsWith("data:"))
+          continue;
+        try {
+          const chunk = JSON.parse(payload);
+          assembled +=
+            chunk.choices?.[0]?.delta?.content ??
+            chunk.choices?.[0]?.message?.content ??
+            "";
+        } catch {
+          // Ignore malformed keep-alive fragments.
+        }
+      }
+      text = assembled;
+    } else {
+      // Some gateways ignore stream:true and reply with plain JSON.
+      const completion = JSON.parse(raw);
+      text = completion.choices?.[0]?.message?.content ?? "";
+    }
   } catch (e) {
     const reason =
       e instanceof Error && e.name === "TimeoutError"
-        ? "the AI service took more than 2 minutes to answer"
+        ? "the AI service took more than 4 minutes to answer"
         : e instanceof Error
           ? e.message
           : String(e);
@@ -109,16 +149,6 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!aiResponse.ok) {
-    const detail = await aiResponse.text();
-    return NextResponse.json(
-      { error: `AI service error (${aiResponse.status}): ${detail.slice(0, 300)}` },
-      { status: 502 }
-    );
-  }
-
-  const completion = await aiResponse.json();
-  const text: string | undefined = completion.choices?.[0]?.message?.content;
   if (!text) {
     return NextResponse.json(
       { error: "AI service returned an empty reply" },
