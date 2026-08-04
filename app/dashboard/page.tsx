@@ -52,6 +52,13 @@ export default async function DashboardPage({
 
   const { data: receipts, error } = await query;
 
+  // Export links carry the active filters, so you export what you see.
+  const exportParams = new URLSearchParams();
+  if (store) exportParams.set("store", store);
+  if (from) exportParams.set("from", from);
+  if (to) exportParams.set("to", to);
+  const exportQuery = exportParams.toString();
+
   const inputClass =
     "w-full rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-sm text-gray-900 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200";
 
@@ -142,6 +149,26 @@ export default async function DashboardPage({
             ? "No receipts match your search."
             : "No receipts yet — add your first one!"}
         </p>
+      )}
+
+      {receipts && receipts.length > 0 && (
+        <div className="flex items-center justify-end gap-3 text-sm">
+          <span className="text-gray-400">Export:</span>
+          <a
+            href={`/api/export?${exportQuery}`}
+            download
+            className="text-teal-700 hover:underline"
+          >
+            ⬇ Receipts CSV
+          </a>
+          <a
+            href={`/api/export?type=items${exportQuery ? `&${exportQuery}` : ""}`}
+            download
+            className="text-teal-700 hover:underline"
+          >
+            ⬇ Items CSV
+          </a>
+        </div>
       )}
 
       {receipts && receipts.length > 0 && (
