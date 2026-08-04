@@ -13,4 +13,6 @@ export type OcrResult = {
   subtotal: number | null;
   tax_amount: number | null;
   total_amount: number | null;
+  // Which engine read this receipt. Display-only — never saved to the database.
+  source?: "local" | "cloud";
 };

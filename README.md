@@ -68,6 +68,50 @@ bucket for receipt images. It is safe to run more than once.
       overview page with income-vs-expense bars, a ratio donut, category
       ranking and recent receipts. Chart colors are validated for colorblind
       separation; every chart ships a legend, direct labels and a table view.
+- [x] Local AI OCR with automatic cloud fallback (see "Using a local AI model")
+
+## Using a local AI model (saves cloud quota)
+
+Receipt OCR can run on a model on your own machine, with the cloud API kept
+only as a safety net. The app tries the local model first and automatically
+falls back to the cloud when the local read fails, times out, or comes back
+with no total and no items.
+
+### Setup
+
+1. Install [Ollama](https://ollama.com), then pull a **vision** model:
+   ```bash
+   ollama pull qwen2.5vl:7b
+   ```
+2. Confirm it is serving: `curl http://127.0.0.1:11434/v1/models`
+3. In `.env.local`, point the primary at Ollama and keep the cloud as fallback
+   (see [`.env.example`](.env.example) for the full block).
+4. `npm run dev`, then scan as usual. A line above the review form tells you
+   which engine read each receipt.
+
+> **Use `127.0.0.1`, not `localhost`.** Node resolves `localhost` to IPv6 `::1`
+> first, which Ollama does not listen on — you get a confusing `fetch failed`.
+
+### Choosing a model for a 6 GB GPU
+
+Reading a receipt photo needs a **vision** model, so text-only models (Llama,
+Phi, GPT-OSS, DeepSeek-R1 …) cannot do this job regardless of how well they
+would otherwise fit.
+
+| Model | Ollama tag | ~VRAM (Q4) | Notes |
+|---|---|---|---|
+| **Qwen2.5-VL 7B** | `qwen2.5vl:7b` | ~4.7 GB | Best receipt/document accuracy that still fits 6 GB. Sits near the edge, so expect ~30–90 s per receipt. **Start here.** |
+| Gemma 3 4B | `gemma3:4b` | ~3.3 GB | Comfortable fit, much faster, strong Thai. Switch to this if the 7B is too slow. |
+| Qwen2.5-VL 3B | `qwen2.5vl:3b` | ~2.2 GB | Fastest, weakest on small print. |
+
+Swapping is a one-line change to `OCR_MODEL` — trying all three costs nothing.
+
+**What to expect:** printed Thai receipts read well locally. Handwritten Thai
+bills often fail on a 6 GB model — those fall through to the cloud API, so
+quota is still spent on hard receipts, just not on easy ones.
+
+Run `npm run test:ocr` to check the provider/fallback logic against mock
+servers (no GPU or API key needed).
 
 ## Troubleshooting
 
@@ -85,10 +129,10 @@ bucket for receipt images. It is safe to run more than once.
    - Try switching to OpenAI API or another provider accessible from Vercel
    - Check your OCR provider's IP whitelisting or network restrictions
 
-3. **API timeout** (model taking >50 seconds)
-   - The endpoint has a 50-second timeout before the serverless function itself times out at 60s
-   - Large or complex receipts may exceed this; smaller images process faster
-   - Try compressing or cropping the receipt image
+3. **API timeout**
+   - A local model gets 180s and a cloud one 240s, inside a 300s function limit
+   - Long or handwritten receipts are the slow case; smaller images process faster
+   - When a local model is configured, timeouts fall through to the cloud fallback
 
 4. **Supabase storage quota exceeded**
    - Free tier includes 1 GB of storage (database + images combined)

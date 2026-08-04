@@ -333,6 +333,17 @@ export default function UploadClient() {
           ) : (
             current.result && (
               <>
+                {/* Which engine read this one — the point of running a local
+                    model is saving cloud quota, so make it visible when a
+                    receipt fell through to the cloud. */}
+                {current.result.source && (
+                  <p className="text-xs text-gray-500">
+                    {current.result.source === "local"
+                      ? "💻 อ่านด้วย AI ในเครื่อง (ไม่เปลือง token)"
+                      : "☁️ อ่านด้วย AI บนคลาวด์"}
+                  </p>
+                )}
+
                 <details className="rounded-xl border border-gray-200">
                   <summary className="cursor-pointer px-4 py-2.5 text-sm text-gray-600">
                     📷 ดูรูปใบเสร็จ
