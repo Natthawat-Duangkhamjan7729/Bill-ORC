@@ -2,7 +2,14 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Pages that require the user to be logged in.
-const PROTECTED_PATHS = ["/dashboard", "/upload", "/receipts", "/summary"];
+const PROTECTED_PATHS = [
+  "/dashboard",
+  "/upload",
+  "/receipts",
+  "/summary",
+  "/sales",
+  "/profit",
+];
 
 // Runs on every request: keeps the login session fresh and redirects
 // visitors to the right place depending on whether they are logged in.

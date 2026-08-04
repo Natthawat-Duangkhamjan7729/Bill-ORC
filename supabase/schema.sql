@@ -31,9 +31,24 @@ create table if not exists public.receipt_items (
   total_price numeric(12, 2)
 );
 
+-- Daily sales income, entered by hand (no OCR needed — totals usually
+-- come straight from the till or banking app).
+create table if not exists public.sales (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  sale_date date not null,
+  amount numeric(12, 2) not null check (amount > 0),
+  channel text, -- เงินสด / โอน / เดลิเวอรี่ / อื่น ๆ
+  note text,
+  created_at timestamptz not null default now()
+);
+
 -- Speeds up the dashboard (list my receipts, newest first) and search.
 create index if not exists receipts_user_date_idx
   on public.receipts (user_id, purchase_date desc);
+
+create index if not exists sales_user_date_idx
+  on public.sales (user_id, sale_date desc);
 
 create index if not exists receipt_items_receipt_idx
   on public.receipt_items (receipt_id);
@@ -44,6 +59,14 @@ create index if not exists receipt_items_receipt_idx
 
 alter table public.receipts enable row level security;
 alter table public.receipt_items enable row level security;
+alter table public.sales enable row level security;
+
+drop policy if exists "Users manage own sales" on public.sales;
+create policy "Users manage own sales"
+  on public.sales
+  for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
 
 drop policy if exists "Users manage own receipts" on public.receipts;
 create policy "Users manage own receipts"

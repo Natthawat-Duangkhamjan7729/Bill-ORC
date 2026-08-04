@@ -57,6 +57,11 @@ bucket for receipt images. It is safe to run more than once.
 - [x] Edit receipts: modify store name, date, items, and totals after creation
 - [x] Store analytics: top 5 stores by spending + "Other" rollup in summary page
 - [x] Live deployment to Vercel with environment variable configuration
+- [x] CSV export (receipts + items) with Thai headers, honoring dashboard filters
+- [x] Expense categories: AI-guessed during OCR, editable, with per-category
+      breakdown on the summary page
+- [x] Sales logging (`/sales`): quick daily income entry, no OCR needed
+- [x] Profit & loss (`/profit`): monthly income vs expense chart and table
 
 ## Troubleshooting
 

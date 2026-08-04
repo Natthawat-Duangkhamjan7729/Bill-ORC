@@ -74,18 +74,30 @@ export default async function DashboardPage({
         <LogoutButton />
       </header>
 
-      <div className="flex gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <Link
           href="/upload"
-          className="flex-1 rounded-lg bg-teal-600 px-4 py-2.5 text-center font-medium text-white transition hover:bg-teal-700"
+          className="rounded-lg bg-teal-600 px-4 py-2.5 text-center font-medium text-white transition hover:bg-teal-700"
         >
           + Add receipt
         </Link>
         <Link
+          href="/sales"
+          className="rounded-lg border border-teal-600 px-4 py-2.5 text-center font-medium text-teal-700 transition hover:bg-teal-50"
+        >
+          💰 บันทึกขาย
+        </Link>
+        <Link
           href="/summary"
-          className="flex-1 rounded-lg border border-teal-600 px-4 py-2.5 text-center font-medium text-teal-700 transition hover:bg-teal-50"
+          className="rounded-lg border border-teal-600 px-4 py-2.5 text-center font-medium text-teal-700 transition hover:bg-teal-50"
         >
           📊 Summary
+        </Link>
+        <Link
+          href="/profit"
+          className="rounded-lg border border-teal-600 px-4 py-2.5 text-center font-medium text-teal-700 transition hover:bg-teal-50"
+        >
+          📈 กำไร-ขาดทุน
         </Link>
       </div>
 
