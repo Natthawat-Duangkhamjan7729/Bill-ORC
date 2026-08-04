@@ -118,7 +118,15 @@ export default function UploadPage() {
       for (const item of items) {
         patchItem(item.id, { status: "extracting" });
         try {
-          const result = await ocrImage(item.image);
+          let result: OcrResult;
+          try {
+            result = await ocrImage(item.image);
+          } catch {
+            // The AI gateway is sometimes slow or flaky on one request —
+            // wait a moment and quietly try once more before giving up.
+            await new Promise((r) => setTimeout(r, 3000));
+            result = await ocrImage(item.image);
+          }
           patchItem(item.id, { status: "ready", result });
         } catch (err) {
           patchItem(item.id, {

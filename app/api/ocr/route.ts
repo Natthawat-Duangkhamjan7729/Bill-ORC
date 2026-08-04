@@ -3,8 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { isCategory } from "@/lib/categories";
 import type { OcrResult } from "@/lib/types";
 
-// Allow up to 60s — vision models can take a while on large receipts.
-export const maxDuration = 60;
+// Allow up to 300s (Vercel Fluid compute limit) — the vision model can
+// take well over a minute on long or handwritten receipts.
+export const maxDuration = 300;
 
 const EXTRACTION_PROMPT = `You are a receipt-reading assistant. Extract the purchase data from this receipt photo. The receipt may be in Thai or English.
 
@@ -78,9 +79,9 @@ export async function POST(request: Request) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
-      // Give up before the serverless function itself is killed (60s),
-      // so the user gets a real error message instead of a platform timeout.
-      signal: AbortSignal.timeout(50_000),
+      // Give up before the serverless function itself is killed, so the
+      // user gets a real error message instead of a platform timeout.
+      signal: AbortSignal.timeout(120_000),
       body: JSON.stringify({
         model,
         stream: false,
@@ -98,7 +99,7 @@ export async function POST(request: Request) {
   } catch (e) {
     const reason =
       e instanceof Error && e.name === "TimeoutError"
-        ? "the AI service took more than 50 seconds to answer"
+        ? "the AI service took more than 2 minutes to answer"
         : e instanceof Error
           ? e.message
           : String(e);
