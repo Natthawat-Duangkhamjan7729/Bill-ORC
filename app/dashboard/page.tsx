@@ -42,7 +42,7 @@ export default async function DashboardPage({
   // Newest purchases first; receipts without a date go last.
   let query = supabase
     .from("receipts")
-    .select("id, store_name, purchase_date, total_amount")
+    .select("id, store_name, purchase_date, category, total_amount")
     .order("purchase_date", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false });
 
@@ -183,8 +183,13 @@ export default async function DashboardPage({
                   <p className="truncate font-medium text-gray-900">
                     {receipt.store_name ?? "Unknown store"}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="flex items-center gap-2 text-sm text-gray-500">
                     {formatDate(receipt.purchase_date)}
+                    {receipt.category && (
+                      <span className="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700">
+                        {receipt.category}
+                      </span>
+                    )}
                   </p>
                 </div>
                 <p className="shrink-0 font-semibold text-gray-900">

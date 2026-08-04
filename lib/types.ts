@@ -3,6 +3,7 @@
 export type OcrResult = {
   store_name: string | null;
   purchase_date: string | null; // YYYY-MM-DD
+  category?: string | null; // one of lib/categories.ts CATEGORIES
   items: {
     item_name: string;
     quantity: number;

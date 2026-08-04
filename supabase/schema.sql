@@ -11,12 +11,16 @@ create table if not exists public.receipts (
   user_id uuid not null references auth.users (id) on delete cascade,
   store_name text,
   purchase_date date,
+  category text,
   subtotal numeric(12, 2),
   tax_amount numeric(12, 2),
   total_amount numeric(12, 2),
   image_url text,
   created_at timestamptz not null default now()
 );
+
+-- Upgrade for databases created before the category feature existed.
+alter table public.receipts add column if not exists category text;
 
 create table if not exists public.receipt_items (
   id uuid primary key default gen_random_uuid(),

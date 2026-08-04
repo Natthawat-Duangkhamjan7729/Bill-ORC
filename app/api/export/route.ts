@@ -43,7 +43,7 @@ export async function GET(request: Request) {
   let query = supabase
     .from("receipts")
     .select(
-      "id, store_name, purchase_date, subtotal, tax_amount, total_amount, created_at, receipt_items(item_name, quantity, unit_price, total_price)"
+      "id, store_name, purchase_date, category, subtotal, tax_amount, total_amount, created_at, receipt_items(item_name, quantity, unit_price, total_price)"
     )
     .order("purchase_date", { ascending: true, nullsFirst: true })
     .order("created_at", { ascending: true });
@@ -68,6 +68,7 @@ export async function GET(request: Request) {
       toCsvRow([
         "วันที่",
         "ร้านค้า",
+        "หมวดหมู่",
         "รายการสินค้า",
         "จำนวน",
         "ราคาต่อหน่วย",
@@ -80,6 +81,7 @@ export async function GET(request: Request) {
           toCsvRow([
             receipt.purchase_date,
             receipt.store_name,
+            receipt.category,
             item.item_name,
             item.quantity,
             item.unit_price,
@@ -96,6 +98,7 @@ export async function GET(request: Request) {
     toCsvRow([
       "วันที่",
       "ร้านค้า",
+      "หมวดหมู่",
       "ยอดก่อนภาษี",
       "ภาษี",
       "ยอดรวม",
@@ -108,6 +111,7 @@ export async function GET(request: Request) {
       toCsvRow([
         receipt.purchase_date,
         receipt.store_name,
+        receipt.category,
         receipt.subtotal,
         receipt.tax_amount,
         receipt.total_amount,

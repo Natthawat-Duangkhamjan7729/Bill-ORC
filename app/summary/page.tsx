@@ -26,7 +26,7 @@ export default async function SummaryPage() {
 
   const { data: receipts, error } = await supabase
     .from("receipts")
-    .select("purchase_date, store_name, total_amount")
+    .select("purchase_date, store_name, category, total_amount")
     .not("total_amount", "is", null)
     .order("purchase_date");
 
@@ -74,6 +74,20 @@ export default async function SummaryPage() {
     });
   }
   const maxStoreTotal = Math.max(...topStores.map((s) => s.total), 0);
+
+  // Group by category so you can see where the money actually goes.
+  const byCategory = new Map<string, { total: number; count: number }>();
+  for (const receipt of receipts ?? []) {
+    const name = receipt.category ?? "ไม่ระบุหมวด";
+    const row = byCategory.get(name) ?? { total: 0, count: 0 };
+    row.total += Number(receipt.total_amount);
+    row.count += 1;
+    byCategory.set(name, row);
+  }
+  const rankedCategories = Array.from(byCategory.entries())
+    .map(([name, v]) => ({ name, ...v }))
+    .sort((a, b) => b.total - a.total);
+  const maxCategoryTotal = Math.max(...rankedCategories.map((c) => c.total), 0);
 
   const maxTotal = Math.max(...months.map((m) => m.total), 0);
   const latest = months[months.length - 1];
@@ -161,6 +175,37 @@ export default async function SummaryPage() {
               </span>
             ))}
           </div>
+        </figure>
+      )}
+
+      {rankedCategories.length > 0 && (
+        <figure className="rounded-xl border border-gray-200 p-4">
+          <figcaption className="mb-4 text-sm font-medium text-gray-700">
+            รายจ่ายตามหมวดหมู่
+          </figcaption>
+          <ul className="flex flex-col gap-3">
+            {rankedCategories.map((cat) => (
+              <li
+                key={cat.name}
+                title={`${cat.name}: ${formatBaht(cat.total)} (${cat.count} receipt${cat.count === 1 ? "" : "s"})`}
+              >
+                <div className="mb-1 flex items-baseline justify-between gap-3 text-sm">
+                  <span className="truncate text-gray-700">{cat.name}</span>
+                  <span className="shrink-0 font-medium text-gray-900">
+                    {formatBaht(cat.total)}
+                  </span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-gray-100">
+                  <div
+                    className="h-2 rounded-full bg-teal-600"
+                    style={{
+                      width: `${maxCategoryTotal > 0 ? Math.max((cat.total / maxCategoryTotal) * 100, 1) : 1}%`,
+                    }}
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
         </figure>
       )}
 

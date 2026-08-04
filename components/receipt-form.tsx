@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { CATEGORIES } from "@/lib/categories";
 import type { OcrResult } from "@/lib/types";
 
 type ItemRow = {
@@ -29,6 +30,7 @@ export default function ReceiptForm({
   const router = useRouter();
   const [storeName, setStoreName] = useState(initial.store_name ?? "");
   const [purchaseDate, setPurchaseDate] = useState(initial.purchase_date ?? "");
+  const [category, setCategory] = useState(initial.category ?? "");
   const [subtotal, setSubtotal] = useState(numToStr(initial.subtotal));
   const [taxAmount, setTaxAmount] = useState(numToStr(initial.tax_amount));
   const [totalAmount, setTotalAmount] = useState(numToStr(initial.total_amount));
@@ -83,6 +85,7 @@ export default function ReceiptForm({
       const fields = {
         store_name: storeName.trim(),
         purchase_date: purchaseDate || null,
+        category: category || null,
         subtotal: strToNum(subtotal),
         tax_amount: strToNum(taxAmount),
         total_amount: strToNum(totalAmount),
@@ -197,6 +200,23 @@ export default function ReceiptForm({
             onChange={(e) => setPurchaseDate(e.target.value)}
             className={inputClass}
           />
+        </label>
+        <label className="col-span-2 flex flex-col gap-1 sm:col-span-1">
+          <span className="text-sm font-medium text-gray-700">
+            หมวดหมู่ (Category)
+          </span>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className={inputClass}
+          >
+            <option value="">— ไม่ระบุ —</option>
+            {CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
         </label>
         <label className="flex flex-col gap-1">
           <span className="text-sm font-medium text-gray-700">Subtotal</span>

@@ -37,7 +37,7 @@ export default async function ReceiptDetailPage({
   const { data: receipt } = await supabase
     .from("receipts")
     .select(
-      "id, store_name, purchase_date, subtotal, tax_amount, total_amount, image_url, created_at"
+      "id, store_name, purchase_date, category, subtotal, tax_amount, total_amount, image_url, created_at"
     )
     .eq("id", id)
     .maybeSingle();
@@ -83,7 +83,14 @@ export default async function ReceiptDetailPage({
         <h1 className="text-2xl font-bold tracking-tight">
           {receipt.store_name ?? "Unknown store"}
         </h1>
-        <p className="text-gray-500">{formatDate(receipt.purchase_date)}</p>
+        <p className="flex items-center gap-2 text-gray-500">
+          {formatDate(receipt.purchase_date)}
+          {receipt.category && (
+            <span className="rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700">
+              {receipt.category}
+            </span>
+          )}
+        </p>
       </div>
 
       {imageUrl ? (

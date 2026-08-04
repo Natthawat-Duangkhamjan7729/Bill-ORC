@@ -21,7 +21,9 @@ export default async function EditReceiptPage({
 
   const { data: receipt } = await supabase
     .from("receipts")
-    .select("id, store_name, purchase_date, subtotal, tax_amount, total_amount")
+    .select(
+      "id, store_name, purchase_date, category, subtotal, tax_amount, total_amount"
+    )
     .eq("id", id)
     .maybeSingle();
 
@@ -38,6 +40,7 @@ export default async function EditReceiptPage({
   const initial: OcrResult = {
     store_name: receipt.store_name,
     purchase_date: receipt.purchase_date,
+    category: receipt.category,
     subtotal: receipt.subtotal,
     tax_amount: receipt.tax_amount,
     total_amount: receipt.total_amount,

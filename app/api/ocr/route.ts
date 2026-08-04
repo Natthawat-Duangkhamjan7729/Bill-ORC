@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { isCategory } from "@/lib/categories";
 import type { OcrResult } from "@/lib/types";
 
 // Allow up to 60s — vision models can take a while on large receipts.
@@ -12,6 +13,7 @@ Reply with ONLY a JSON object — no markdown, no code fences, no explanations �
 {
   "store_name": string or null,
   "purchase_date": "YYYY-MM-DD" or null,
+  "category": string or null,
   "items": [
     { "item_name": string, "quantity": number, "unit_price": number or null, "total_price": number or null }
   ],
@@ -21,6 +23,7 @@ Reply with ONLY a JSON object — no markdown, no code fences, no explanations �
 }
 
 Rules:
+- category is your best guess of what this purchase is for, from EXACTLY this list: "วัตถุดิบ" (ingredients/stock to resell or cook), "ค่าน้ำ/ค่าไฟ" (utility bills), "อุปกรณ์" (equipment/tools/supplies), "ค่าขนส่ง" (delivery/transport), "ค่าเช่า" (rent), "อื่น ๆ" (anything else). Use null only if you truly cannot tell.
 - Use null for anything you cannot read; never invent values.
 - Numbers must be plain numbers without currency symbols or thousand separators.
 - Thai dates are often day/month/year and may use the Buddhist year (พ.ศ. = ค.ศ. + 543); convert to the Gregorian YYYY-MM-DD.
@@ -139,6 +142,7 @@ export async function POST(request: Request) {
   }
 
   // Normalize so the frontend can rely on the shape.
+  result.category = isCategory(result.category) ? result.category : null;
   result.items = Array.isArray(result.items) ? result.items : [];
   result.items = result.items.map((item) => ({
     item_name: String(item.item_name ?? ""),
