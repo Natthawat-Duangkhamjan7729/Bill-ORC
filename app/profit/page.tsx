@@ -1,26 +1,15 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import AppShell from "@/components/app-shell";
+import {
+  Card,
+  StatCard,
+  IncomeExpenseBars,
+  type MonthPoint,
+} from "@/components/charts";
+import { formatBaht, formatBahtWhole, monthLabelTh } from "@/lib/viz";
 
 export const dynamic = "force-dynamic";
-
-type MonthRow = {
-  key: string; // "2026-08"
-  label: string; // "ส.ค. 26"
-  income: number;
-  expense: number;
-};
-
-function formatBaht(n: number): string {
-  return `฿${n.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
-function monthLabel(key: string): string {
-  return new Date(key + "-01T00:00:00").toLocaleDateString("th-TH", {
-    month: "short",
-    year: "2-digit",
-  });
-}
 
 export default async function ProfitPage() {
   const supabase = await createClient();
@@ -40,14 +29,13 @@ export default async function ProfitPage() {
       .not("total_amount", "is", null)
       .not("purchase_date", "is", null),
   ]);
-
   const loadError = salesRes.error ?? receiptsRes.error;
 
-  const byMonth = new Map<string, MonthRow>();
-  function monthRow(key: string): MonthRow {
+  const byMonth = new Map<string, MonthPoint>();
+  function monthRow(key: string): MonthPoint {
     let row = byMonth.get(key);
     if (!row) {
-      row = { key, label: monthLabel(key), income: 0, expense: 0 };
+      row = { key, label: monthLabelTh(key), income: 0, expense: 0 };
       byMonth.set(key, row);
     }
     return row;
@@ -64,159 +52,106 @@ export default async function ProfitPage() {
   const months = Array.from(byMonth.values())
     .sort((a, b) => a.key.localeCompare(b.key))
     .slice(-12);
-  const maxValue = Math.max(
-    ...months.flatMap((m) => [m.income, m.expense]),
-    0
-  );
 
   const currentKey = new Date().toISOString().slice(0, 7);
   const current = byMonth.get(currentKey);
-  const currentProfit = (current?.income ?? 0) - (current?.expense ?? 0);
+  const income = current?.income ?? 0;
+  const expense = current?.expense ?? 0;
+  const profit = income - expense;
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-5 p-6">
-      <header className="flex items-center justify-between">
-        <Link href="/dashboard" className="text-sm text-teal-700 hover:underline">
-          ← Back to dashboard
-        </Link>
-        <Link href="/sales" className="text-sm text-teal-700 hover:underline">
-          💰 บันทึกยอดขาย
-        </Link>
-      </header>
-
-      <h1 className="text-2xl font-bold tracking-tight">กำไร-ขาดทุน</h1>
-
-      {loadError && (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          โหลดข้อมูลไม่สำเร็จ: {loadError.message}
-        </p>
-      )}
-
-      {/* This month at a glance */}
-      <div className="grid grid-cols-3 gap-2">
-        <div className="rounded-xl border border-gray-200 p-3">
-          <p className="text-xs text-gray-500">รายรับเดือนนี้</p>
-          <p className="mt-1 font-bold tracking-tight text-teal-700">
-            {formatBaht(current?.income ?? 0)}
+    <AppShell
+      title="กำไร-ขาดทุน"
+      subtitle={`เดือน ${monthLabelTh(currentKey)}`}
+      email={user.email}
+    >
+      <div className="flex flex-col gap-4">
+        {loadError && (
+          <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            โหลดข้อมูลไม่สำเร็จ: {loadError.message}
           </p>
-        </div>
-        <div className="rounded-xl border border-gray-200 p-3">
-          <p className="text-xs text-gray-500">รายจ่ายเดือนนี้</p>
-          <p className="mt-1 font-bold tracking-tight text-amber-600">
-            {formatBaht(current?.expense ?? 0)}
-          </p>
-        </div>
-        <div className="rounded-xl border border-gray-200 p-3">
-          <p className="text-xs text-gray-500">กำไรเดือนนี้</p>
-          <p
-            className={`mt-1 font-bold tracking-tight ${currentProfit >= 0 ? "text-teal-700" : "text-red-600"}`}
-          >
-            {formatBaht(currentProfit)}
-          </p>
-        </div>
-      </div>
+        )}
 
-      {months.length === 0 && !loadError && (
-        <p className="rounded-xl border border-dashed border-gray-300 px-4 py-10 text-center text-gray-400">
-          ยังไม่มีข้อมูล — บันทึกยอดขายและใบเสร็จก่อน แล้วกำไร-ขาดทุนจะแสดงที่นี่
-        </p>
-      )}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <StatCard
+            icon="💰"
+            tint="bg-teal-50"
+            label="รายรับเดือนนี้"
+            value={formatBahtWhole(income)}
+          />
+          <StatCard
+            icon="🧾"
+            tint="bg-orange-50"
+            label="รายจ่ายเดือนนี้"
+            value={formatBahtWhole(expense)}
+          />
+          <StatCard
+            icon={profit >= 0 ? "📈" : "📉"}
+            tint={profit >= 0 ? "bg-teal-50" : "bg-red-50"}
+            label="กำไรเดือนนี้"
+            value={formatBahtWhole(profit)}
+            valueClass={profit >= 0 ? "text-teal-700" : "text-red-600"}
+          />
+        </div>
 
-      {months.length > 0 && (
-        <figure className="rounded-xl border border-gray-200 p-4">
-          <figcaption className="mb-1 text-sm font-medium text-gray-700">
-            รายรับ vs รายจ่าย รายเดือน
-          </figcaption>
-          <div className="mb-3 flex items-center gap-4 text-xs text-gray-500">
-            <span className="flex items-center gap-1.5">
-              <span className="inline-block h-2.5 w-2.5 rounded-sm bg-teal-600" />
-              รายรับ (ขาย)
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="inline-block h-2.5 w-2.5 rounded-sm bg-amber-500" />
-              รายจ่าย (ใบเสร็จ)
-            </span>
-          </div>
-          <div
-            className="flex items-end gap-2 border-b border-gray-300"
-            style={{ height: "10rem" }}
-            role="img"
-            aria-label={`กราฟเปรียบเทียบรายรับกับรายจ่าย ${months.length} เดือน`}
-          >
-            {months.map((month) => (
-              <div
-                key={month.key}
-                className="flex h-full flex-1 items-end justify-center gap-0.5"
-                title={`${month.label}: รายรับ ${formatBaht(month.income)}, รายจ่าย ${formatBaht(month.expense)}, กำไร ${formatBaht(month.income - month.expense)}`}
-              >
-                <div
-                  className="w-full max-w-5 rounded-t bg-teal-600"
-                  style={{
-                    height: `${maxValue > 0 ? Math.max((month.income / maxValue) * 100, month.income > 0 ? 2 : 0) : 0}%`,
-                  }}
-                />
-                <div
-                  className="w-full max-w-5 rounded-t bg-amber-500"
-                  style={{
-                    height: `${maxValue > 0 ? Math.max((month.expense / maxValue) * 100, month.expense > 0 ? 2 : 0) : 0}%`,
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="mt-1 flex gap-2">
-            {months.map((month) => (
-              <span
-                key={month.key}
-                className="flex-1 text-center text-[10px] text-gray-500"
-              >
-                {month.label}
-              </span>
-            ))}
-          </div>
-        </figure>
-      )}
+        {months.length === 0 && !loadError && (
+          <Card>
+            <p className="py-12 text-center text-gray-400">
+              ยังไม่มีข้อมูล — บันทึกยอดขายและใบเสร็จก่อน
+              แล้วกำไร-ขาดทุนจะแสดงที่นี่
+            </p>
+          </Card>
+        )}
 
-      {months.length > 0 && (
-        <div className="overflow-x-auto rounded-xl border border-gray-200">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-200 bg-gray-50 text-left text-gray-500">
-                <th className="px-4 py-2 font-medium">เดือน</th>
-                <th className="px-2 py-2 text-right font-medium">รายรับ</th>
-                <th className="px-2 py-2 text-right font-medium">รายจ่าย</th>
-                <th className="px-4 py-2 text-right font-medium">กำไร</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[...months].reverse().map((month) => {
-                const profit = month.income - month.expense;
-                return (
-                  <tr key={month.key} className="border-b border-gray-100">
-                    <td className="px-4 py-2">{month.label}</td>
-                    <td className="px-2 py-2 text-right">
-                      {formatBaht(month.income)}
-                    </td>
-                    <td className="px-2 py-2 text-right">
-                      {formatBaht(month.expense)}
-                    </td>
-                    <td
-                      className={`px-4 py-2 text-right font-medium ${profit >= 0 ? "text-teal-700" : "text-red-600"}`}
-                    >
-                      {formatBaht(profit)}
-                    </td>
+        {months.length > 0 && (
+          <Card title="รายรับ vs รายจ่าย รายเดือน">
+            <IncomeExpenseBars months={months} />
+          </Card>
+        )}
+
+        {months.length > 0 && (
+          <Card title="ตารางรายเดือน">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200 text-left text-gray-500">
+                    <th className="py-2 pr-2 font-medium">เดือน</th>
+                    <th className="px-2 py-2 text-right font-medium">รายรับ</th>
+                    <th className="px-2 py-2 text-right font-medium">รายจ่าย</th>
+                    <th className="py-2 pl-2 text-right font-medium">กำไร</th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+                </thead>
+                <tbody>
+                  {[...months].reverse().map((month) => {
+                    const rowProfit = month.income - month.expense;
+                    return (
+                      <tr key={month.key} className="border-b border-gray-100 last:border-0">
+                        <td className="py-2 pr-2">{month.label}</td>
+                        <td className="px-2 py-2 text-right tabular-nums">
+                          {formatBaht(month.income)}
+                        </td>
+                        <td className="px-2 py-2 text-right tabular-nums">
+                          {formatBaht(month.expense)}
+                        </td>
+                        <td
+                          className={`py-2 pl-2 text-right font-medium tabular-nums ${rowProfit >= 0 ? "text-teal-700" : "text-red-600"}`}
+                        >
+                          {formatBaht(rowProfit)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        )}
 
-      <p className="text-xs text-gray-400">
-        รายรับมาจากหน้า &quot;บันทึกยอดขาย&quot; และรายจ่ายมาจากใบเสร็จที่สแกนไว้
-        (นับเฉพาะใบที่มีวันที่และยอดรวม)
-      </p>
-    </main>
+        <p className="text-xs text-gray-400">
+          รายรับมาจากหน้า &quot;ยอดขาย&quot; และรายจ่ายมาจากใบเสร็จที่สแกนไว้
+          (นับเฉพาะใบที่มีวันที่และยอดรวม)
+        </p>
+      </div>
+    </AppShell>
   );
 }

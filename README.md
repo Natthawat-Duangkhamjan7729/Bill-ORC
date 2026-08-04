@@ -64,6 +64,10 @@ bucket for receipt images. It is safe to run more than once.
 - [x] Profit & loss (`/profit`): monthly income vs expense chart and table
 - [x] Batch scanning: upload several receipt photos at once; OCR runs as a
       queue while you review finished ones (retry / manual entry / skip per photo)
+- [x] Dashboard redesign: sidebar + bottom-nav app shell, KPI tiles, and an
+      overview page with income-vs-expense bars, a ratio donut, category
+      ranking and recent receipts. Chart colors are validated for colorblind
+      separation; every chart ships a legend, direct labels and a table view.
 
 ## Troubleshooting
 

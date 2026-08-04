@@ -1,18 +1,20 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import AppShell from "@/components/app-shell";
+import { formatBaht as fmt } from "@/lib/viz";
 import DeleteButton from "./delete-button";
 
 export const dynamic = "force-dynamic";
 
 function formatBaht(n: number | null): string {
   if (n == null) return "—";
-  return `฿${n.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return fmt(Number(n));
 }
 
 function formatDate(d: string | null): string {
-  if (!d) return "No date";
-  return new Date(d + "T00:00:00").toLocaleDateString("en-GB", {
+  if (!d) return "ไม่มีวันที่";
+  return new Date(d + "T00:00:00").toLocaleDateString("th-TH", {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -63,69 +65,60 @@ export default async function ReceiptDetailPage({
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-5 p-6">
-      <header className="flex items-center justify-between">
-        <Link href="/dashboard" className="text-sm text-teal-700 hover:underline">
-          ← Back to dashboard
-        </Link>
-        <div className="flex items-center gap-2">
+    <AppShell
+      title={receipt.store_name ?? "ไม่ระบุร้าน"}
+      subtitle={`${formatDate(receipt.purchase_date)}${receipt.category ? ` · ${receipt.category}` : ""}`}
+      email={user.email}
+      action={
+        <>
           <Link
             href={`/receipts/${receipt.id}/edit`}
             className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 transition hover:bg-gray-50"
           >
-            Edit
+            แก้ไข
           </Link>
           <DeleteButton receiptId={receipt.id} imagePath={receipt.image_url} />
-        </div>
-      </header>
-
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          {receipt.store_name ?? "Unknown store"}
-        </h1>
-        <p className="flex items-center gap-2 text-gray-500">
-          {formatDate(receipt.purchase_date)}
-          {receipt.category && (
-            <span className="rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700">
-              {receipt.category}
-            </span>
-          )}
-        </p>
-      </div>
+        </>
+      }
+    >
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+      <Link href="/receipts" className="text-sm text-teal-700 hover:underline">
+        ← กลับไปหน้าใบเสร็จ
+      </Link>
 
       {imageUrl ? (
-        <details className="rounded-xl border border-gray-200">
-          <summary className="cursor-pointer px-4 py-2.5 text-sm text-gray-600">
-            📷 Show receipt photo
+        <details className="rounded-2xl border border-gray-200 bg-white">
+          <summary className="cursor-pointer px-4 py-3 text-sm text-gray-600">
+            📷 ดูรูปใบเสร็จ
           </summary>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl}
-            alt={`Receipt from ${receipt.store_name ?? "store"}`}
+            alt={`ใบเสร็จจาก ${receipt.store_name ?? "ร้าน"}`}
             className="max-h-[70vh] w-full object-contain p-2"
           />
         </details>
       ) : (
-        <p className="rounded-xl border border-dashed border-gray-300 px-4 py-3 text-center text-sm text-gray-400">
-          No photo stored for this receipt
+        <p className="rounded-2xl border border-dashed border-gray-300 bg-white px-4 py-3 text-center text-sm text-gray-400">
+          ไม่มีรูปสำหรับใบเสร็จนี้
         </p>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-gray-200">
+      <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50 text-left text-gray-500">
-              <th className="px-4 py-2 font-medium">Item</th>
-              <th className="px-2 py-2 text-right font-medium">Qty</th>
-              <th className="px-2 py-2 text-right font-medium">Unit</th>
-              <th className="px-4 py-2 text-right font-medium">Total</th>
+              <th className="px-4 py-2 font-medium">รายการ</th>
+              <th className="px-2 py-2 text-right font-medium">จำนวน</th>
+              <th className="px-2 py-2 text-right font-medium">ราคา/หน่วย</th>
+              <th className="px-4 py-2 text-right font-medium">รวม</th>
             </tr>
           </thead>
           <tbody>
             {(items ?? []).length === 0 && (
               <tr>
                 <td colSpan={4} className="px-4 py-6 text-center text-gray-400">
-                  No items recorded
+                  ไม่มีรายการสินค้า
                 </td>
               </tr>
             )}
@@ -145,7 +138,7 @@ export default async function ReceiptDetailPage({
           <tfoot className="text-sm">
             <tr>
               <td colSpan={3} className="px-4 py-1.5 pt-3 text-right text-gray-500">
-                Subtotal
+                ยอดก่อนภาษี
               </td>
               <td className="px-4 py-1.5 pt-3 text-right">
                 {formatBaht(receipt.subtotal)}
@@ -153,7 +146,7 @@ export default async function ReceiptDetailPage({
             </tr>
             <tr>
               <td colSpan={3} className="px-4 py-1.5 text-right text-gray-500">
-                Tax
+                ภาษี
               </td>
               <td className="px-4 py-1.5 text-right">
                 {formatBaht(receipt.tax_amount)}
@@ -161,7 +154,7 @@ export default async function ReceiptDetailPage({
             </tr>
             <tr className="font-semibold">
               <td colSpan={3} className="px-4 py-2 pb-3 text-right">
-                Total
+                ยอดรวม
               </td>
               <td className="px-4 py-2 pb-3 text-right">
                 {formatBaht(receipt.total_amount)}
@@ -170,6 +163,7 @@ export default async function ReceiptDetailPage({
           </tfoot>
         </table>
       </div>
-    </main>
+      </div>
+    </AppShell>
   );
 }

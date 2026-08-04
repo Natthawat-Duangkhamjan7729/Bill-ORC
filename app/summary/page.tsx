@@ -1,19 +1,23 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import AppShell from "@/components/app-shell";
+import { Card, StatCard, RankedBars } from "@/components/charts";
+import {
+  VIZ,
+  formatBaht,
+  formatBahtShort,
+  formatBahtWhole,
+  monthLabelTh,
+} from "@/lib/viz";
 
 export const dynamic = "force-dynamic";
 
 type MonthRow = {
-  key: string; // "2026-08"
-  label: string; // "Aug 26"
+  key: string;
+  label: string;
   total: number;
   count: number;
 };
-
-function formatBaht(n: number): string {
-  return `฿${n.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
 
 export default async function SummaryPage() {
   const supabase = await createClient();
@@ -37,25 +41,17 @@ export default async function SummaryPage() {
     const key = receipt.purchase_date.slice(0, 7);
     const row =
       byMonth.get(key) ??
-      ({
-        key,
-        label: new Date(key + "-01T00:00:00").toLocaleDateString("en-GB", {
-          month: "short",
-          year: "2-digit",
-        }),
-        total: 0,
-        count: 0,
-      } satisfies MonthRow);
+      ({ key, label: monthLabelTh(key), total: 0, count: 0 } satisfies MonthRow);
     row.total += Number(receipt.total_amount);
     row.count += 1;
     byMonth.set(key, row);
   }
   const months = Array.from(byMonth.values()).slice(-12);
 
-  // Group by store: top 5 by total spent, the rest folded into "Other".
+  // Group by store: top 5 by total spent, the rest folded into "อื่น ๆ".
   const byStore = new Map<string, { total: number; count: number }>();
   for (const receipt of receipts ?? []) {
-    const name = receipt.store_name?.trim() || "Unknown store";
+    const name = receipt.store_name?.trim() || "ไม่ระบุร้าน";
     const row = byStore.get(name) ?? { total: 0, count: 0 };
     row.total += Number(receipt.total_amount);
     row.count += 1;
@@ -68,14 +64,13 @@ export default async function SummaryPage() {
   const otherStores = rankedStores.slice(5);
   if (otherStores.length > 0) {
     topStores.push({
-      name: `Other (${otherStores.length} stores)`,
+      name: `อื่น ๆ (${otherStores.length} ร้าน)`,
       total: otherStores.reduce((sum, s) => sum + s.total, 0),
       count: otherStores.reduce((sum, s) => sum + s.count, 0),
     });
   }
-  const maxStoreTotal = Math.max(...topStores.map((s) => s.total), 0);
 
-  // Group by category so you can see where the money actually goes.
+  // Group by category.
   const byCategory = new Map<string, { total: number; count: number }>();
   for (const receipt of receipts ?? []) {
     const name = receipt.category ?? "ไม่ระบุหมวด";
@@ -84,10 +79,9 @@ export default async function SummaryPage() {
     row.count += 1;
     byCategory.set(name, row);
   }
-  const rankedCategories = Array.from(byCategory.entries())
+  const categories = Array.from(byCategory.entries())
     .map(([name, v]) => ({ name, ...v }))
     .sort((a, b) => b.total - a.total);
-  const maxCategoryTotal = Math.max(...rankedCategories.map((c) => c.total), 0);
 
   const maxTotal = Math.max(...months.map((m) => m.total), 0);
   const latest = months[months.length - 1];
@@ -95,175 +89,178 @@ export default async function SummaryPage() {
     (best, m) => (m.total > (best?.total ?? -1) ? m : best),
     undefined as MonthRow | undefined
   );
+  const grandTotal = months.reduce((sum, m) => sum + m.total, 0);
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-5 p-6">
-      <header className="flex items-center justify-between">
-        <Link href="/dashboard" className="text-sm text-teal-700 hover:underline">
-          ← Back to dashboard
-        </Link>
-      </header>
-
-      <h1 className="text-2xl font-bold tracking-tight">Monthly spending</h1>
-
-      {error && (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          Could not load data: {error.message}
-        </p>
-      )}
-
-      {months.length === 0 && !error && (
-        <p className="rounded-xl border border-dashed border-gray-300 px-4 py-10 text-center text-gray-400">
-          No dated receipts yet — totals appear here once you save receipts
-          with a purchase date.
-        </p>
-      )}
-
-      {latest && (
-        <div className="rounded-xl border border-gray-200 p-4">
-          <p className="text-sm text-gray-500">
-            {latest.label} — {latest.count} receipt{latest.count === 1 ? "" : "s"}
+    <AppShell
+      title="สรุปรายจ่าย"
+      subtitle="จากใบเสร็จที่สแกนไว้"
+      email={user.email}
+    >
+      <div className="flex flex-col gap-4">
+        {error && (
+          <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            โหลดข้อมูลไม่สำเร็จ: {error.message}
           </p>
-          <p className="text-3xl font-bold tracking-tight text-gray-900">
-            {formatBaht(latest.total)}
-          </p>
-        </div>
-      )}
+        )}
 
-      {months.length > 0 && (
-        <figure className="rounded-xl border border-gray-200 p-4">
-          <figcaption className="mb-4 text-sm font-medium text-gray-700">
-            Total spent per month
-          </figcaption>
-          <div
-            className="flex items-end gap-1 border-b border-gray-300"
-            style={{ height: "10rem" }}
-            role="img"
-            aria-label={`Bar chart of monthly spending across ${months.length} months`}
-          >
-            {months.map((month) => {
-              const isLabeled =
-                month.key === latest?.key || month.key === maxMonth?.key;
-              return (
+        {months.length === 0 && !error && (
+          <Card>
+            <p className="py-12 text-center text-gray-400">
+              ยังไม่มีใบเสร็จที่มีวันที่ — ยอดจะแสดงที่นี่เมื่อบันทึกใบเสร็จพร้อมวันที่
+            </p>
+          </Card>
+        )}
+
+        {latest && (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <StatCard
+              icon="🧾"
+              tint="bg-orange-50"
+              label={`รายจ่าย ${latest.label}`}
+              value={formatBahtWhole(latest.total)}
+              hint={`${latest.count} ใบ`}
+            />
+            <StatCard
+              icon="📅"
+              tint="bg-blue-50"
+              label="รายจ่ายรวม"
+              value={formatBahtWhole(grandTotal)}
+              hint={`${months.length} เดือน`}
+            />
+            <StatCard
+              icon="🔺"
+              tint="bg-gray-100"
+              label="เดือนสูงสุด"
+              value={maxMonth ? formatBahtWhole(maxMonth.total) : "—"}
+              hint={maxMonth?.label}
+            />
+          </div>
+        )}
+
+        {months.length > 0 && (
+          <Card title="รายจ่ายรวมต่อเดือน">
+            <figure className="flex gap-2">
+              <div
+                className="flex w-12 shrink-0 flex-col justify-between text-right text-[10px] tabular-nums"
+                style={{ height: "10rem", color: VIZ.muted }}
+              >
+                <span>{formatBahtShort(maxTotal)}</span>
+                <span>{formatBahtShort(maxTotal / 2)}</span>
+                <span>฿0</span>
+              </div>
+
+              <div className="min-w-0 flex-1">
                 <div
-                  key={month.key}
-                  className="group relative flex h-full flex-1 flex-col items-center justify-end"
-                  title={`${month.label}: ${formatBaht(month.total)} (${month.count} receipt${month.count === 1 ? "" : "s"})`}
+                  className="relative flex items-end gap-1"
+                  style={{ height: "10rem" }}
+                  role="img"
+                  aria-label={`กราฟแท่งรายจ่ายรายเดือน ${months.length} เดือน`}
                 >
-                  {isLabeled && (
-                    <span className="mb-1 text-[10px] font-medium text-gray-700">
-                      {Math.round(month.total).toLocaleString("th-TH")}
+                  <div
+                    aria-hidden
+                    className="absolute inset-0 flex flex-col justify-between"
+                  >
+                    {[0, 1, 2].map((i) => (
+                      <div
+                        key={i}
+                        style={{
+                          borderTop: `1px ${i === 2 ? "solid" : "dashed"} ${i === 2 ? VIZ.axis : VIZ.grid}`,
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  {months.map((month) => {
+                    const isLabeled =
+                      month.key === latest?.key || month.key === maxMonth?.key;
+                    return (
+                      <div
+                        key={month.key}
+                        className="group relative flex h-full flex-1 flex-col items-center justify-end"
+                      >
+                        <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-lg bg-gray-900 px-2.5 py-1.5 text-[11px] text-white shadow-lg group-hover:block">
+                          <p className="font-semibold">{month.label}</p>
+                          <p>{formatBaht(month.total)}</p>
+                          <p>{month.count} ใบ</p>
+                        </div>
+                        {isLabeled && (
+                          <span className="mb-1 text-[10px] font-medium tabular-nums text-gray-700">
+                            {formatBahtShort(month.total)}
+                          </span>
+                        )}
+                        <div
+                          className="w-full max-w-10"
+                          style={{
+                            height: `${maxTotal > 0 ? Math.max((month.total / maxTotal) * 100, 2) : 2}%`,
+                            background: VIZ.expense,
+                            borderRadius: "4px 4px 0 0",
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-1.5 flex gap-1">
+                  {months.map((month) => (
+                    <span
+                      key={month.key}
+                      className="flex-1 truncate text-center text-[10px]"
+                      style={{ color: VIZ.muted }}
+                    >
+                      {month.label}
                     </span>
-                  )}
-                  <div
-                    className="w-full max-w-10 rounded-t bg-teal-600 transition group-hover:bg-teal-700"
-                    style={{
-                      height: `${maxTotal > 0 ? Math.max((month.total / maxTotal) * 100, 2) : 2}%`,
-                    }}
-                  />
+                  ))}
                 </div>
-              );
-            })}
-          </div>
-          <div className="mt-1 flex gap-1">
-            {months.map((month) => (
-              <span
-                key={month.key}
-                className="flex-1 text-center text-[10px] text-gray-500"
-              >
-                {month.label}
-              </span>
-            ))}
-          </div>
-        </figure>
-      )}
+              </div>
+            </figure>
+          </Card>
+        )}
 
-      {rankedCategories.length > 0 && (
-        <figure className="rounded-xl border border-gray-200 p-4">
-          <figcaption className="mb-4 text-sm font-medium text-gray-700">
-            รายจ่ายตามหมวดหมู่
-          </figcaption>
-          <ul className="flex flex-col gap-3">
-            {rankedCategories.map((cat) => (
-              <li
-                key={cat.name}
-                title={`${cat.name}: ${formatBaht(cat.total)} (${cat.count} receipt${cat.count === 1 ? "" : "s"})`}
-              >
-                <div className="mb-1 flex items-baseline justify-between gap-3 text-sm">
-                  <span className="truncate text-gray-700">{cat.name}</span>
-                  <span className="shrink-0 font-medium text-gray-900">
-                    {formatBaht(cat.total)}
-                  </span>
-                </div>
-                <div className="h-2 w-full rounded-full bg-gray-100">
-                  <div
-                    className="h-2 rounded-full bg-teal-600"
-                    style={{
-                      width: `${maxCategoryTotal > 0 ? Math.max((cat.total / maxCategoryTotal) * 100, 1) : 1}%`,
-                    }}
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
-        </figure>
-      )}
+        <div className="grid gap-4 xl:grid-cols-2">
+          {categories.length > 0 && (
+            <Card title="รายจ่ายตามหมวดหมู่">
+              <RankedBars rows={categories} emptyText="ยังไม่มีข้อมูล" />
+            </Card>
+          )}
 
-      {topStores.length > 0 && (
-        <figure className="rounded-xl border border-gray-200 p-4">
-          <figcaption className="mb-4 text-sm font-medium text-gray-700">
-            Top stores by total spent
-          </figcaption>
-          <ul className="flex flex-col gap-3">
-            {topStores.map((storeRow) => (
-              <li
-                key={storeRow.name}
-                title={`${storeRow.name}: ${formatBaht(storeRow.total)} (${storeRow.count} receipt${storeRow.count === 1 ? "" : "s"})`}
-              >
-                <div className="mb-1 flex items-baseline justify-between gap-3 text-sm">
-                  <span className="truncate text-gray-700">{storeRow.name}</span>
-                  <span className="shrink-0 font-medium text-gray-900">
-                    {formatBaht(storeRow.total)}
-                  </span>
-                </div>
-                <div className="h-2 w-full rounded-full bg-gray-100">
-                  <div
-                    className="h-2 rounded-full bg-teal-600"
-                    style={{
-                      width: `${maxStoreTotal > 0 ? Math.max((storeRow.total / maxStoreTotal) * 100, 1) : 1}%`,
-                    }}
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
-        </figure>
-      )}
-
-      {months.length > 0 && (
-        <div className="overflow-x-auto rounded-xl border border-gray-200">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-200 bg-gray-50 text-left text-gray-500">
-                <th className="px-4 py-2 font-medium">Month</th>
-                <th className="px-2 py-2 text-right font-medium">Receipts</th>
-                <th className="px-4 py-2 text-right font-medium">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[...months].reverse().map((month) => (
-                <tr key={month.key} className="border-b border-gray-100">
-                  <td className="px-4 py-2">{month.label}</td>
-                  <td className="px-2 py-2 text-right">{month.count}</td>
-                  <td className="px-4 py-2 text-right font-medium">
-                    {formatBaht(month.total)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {topStores.length > 0 && (
+            <Card title="ร้านที่จ่ายมากที่สุด">
+              <RankedBars rows={topStores} emptyText="ยังไม่มีข้อมูล" />
+            </Card>
+          )}
         </div>
-      )}
-    </main>
+
+        {months.length > 0 && (
+          <Card title="ตารางรายเดือน">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200 text-left text-gray-500">
+                    <th className="py-2 pr-2 font-medium">เดือน</th>
+                    <th className="px-2 py-2 text-right font-medium">จำนวนใบ</th>
+                    <th className="py-2 pl-2 text-right font-medium">รวม</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...months].reverse().map((month) => (
+                    <tr key={month.key} className="border-b border-gray-100 last:border-0">
+                      <td className="py-2 pr-2">{month.label}</td>
+                      <td className="px-2 py-2 text-right tabular-nums">
+                        {month.count}
+                      </td>
+                      <td className="py-2 pl-2 text-right font-medium tabular-nums">
+                        {formatBaht(month.total)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        )}
+      </div>
+    </AppShell>
   );
 }

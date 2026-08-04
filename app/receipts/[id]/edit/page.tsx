@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import AppShell from "@/components/app-shell";
 import EditForm from "./edit-form";
 import type { OcrResult } from "@/lib/types";
 
@@ -53,9 +54,14 @@ export default async function EditReceiptPage({
   };
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-5 p-6">
-      <h1 className="text-2xl font-bold tracking-tight">Edit receipt</h1>
-      <EditForm receiptId={receipt.id} initial={initial} />
-    </main>
+    <AppShell
+      title="แก้ไขใบเสร็จ"
+      subtitle={receipt.store_name ?? undefined}
+      email={user.email}
+    >
+      <div className="mx-auto w-full max-w-2xl">
+        <EditForm receiptId={receipt.id} initial={initial} />
+      </div>
+    </AppShell>
   );
 }
