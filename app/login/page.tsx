@@ -1,5 +1,7 @@
 "use client";
 
+import { reportError, authErrorMessage } from "@/lib/errors";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -28,7 +30,8 @@ export default function LoginPage() {
           password,
         });
         if (error) {
-          setError(error.message);
+          reportError("auth.signin", error);
+          setError(authErrorMessage(error));
           return;
         }
         router.push("/dashboard");
@@ -39,7 +42,8 @@ export default function LoginPage() {
           password,
         });
         if (error) {
-          setError(error.message);
+          reportError("auth.signup", error);
+          setError(authErrorMessage(error));
           return;
         }
         if (data.session) {

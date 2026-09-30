@@ -1,3 +1,4 @@
+import { reportError } from "@/lib/errors";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -61,6 +62,8 @@ export default async function ReceiptsPage({
 
   const inputClass =
     "w-full rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-sm text-gray-900 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200";
+
+  if (error) reportError("app/receipts/page.tsx", error);
 
   return (
     <AppShell
@@ -131,7 +134,7 @@ export default async function ReceiptsPage({
 
         {error && (
           <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            โหลดใบเสร็จไม่สำเร็จ: {error.message}
+            โหลดใบเสร็จไม่สำเร็จ กรุณารีเฟรชหน้าอีกครั้ง
           </p>
         )}
 
