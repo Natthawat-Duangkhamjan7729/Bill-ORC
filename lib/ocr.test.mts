@@ -112,7 +112,7 @@ check("cloud-only (Vercel) config yields exactly one provider", () => {
   const { s, url } = await server("empty");
   await assert.rejects(
     callProvider({ source: "local", label: "L", baseUrl: url, model: "m", timeoutMs: 5000 }, IMG),
-    /อ่านใบเสร็จไม่ออก/
+    /parsed but empty/
   );
   check("parsed-but-empty result is rejected as a miss", () => {});
   s.close();
@@ -173,10 +173,19 @@ check("cloud-only (Vercel) config yields exactly one provider", () => {
     { source: "local", label: "AI ในเครื่อง", baseUrl: a.url, model: "m", timeoutMs: 5000 },
     { source: "cloud", label: "AI สำรอง", baseUrl: b.url, model: "m", timeoutMs: 5000 },
   ]);
-  check("both failing reports both reasons", () => {
-    assert.ok("error" in out);
-    assert.match(out.error, /AI ในเครื่อง/);
-    assert.match(out.error, /AI สำรอง/);
+  check("both failing reports both reasons in the SERVER detail", () => {
+    assert.ok("clientError" in out);
+    assert.match(out.detail, /AI ในเครื่อง/);
+    assert.match(out.detail, /AI สำรอง/);
+  });
+  check("the CLIENT message leaks no provider, model, URL or upstream body", () => {
+    assert.ok("clientError" in out);
+    for (const secret of ["127.0.0.1", "http", "://", "upstream exploded", "[m]", "HTTP 500"]) {
+      assert.ok(
+        !out.clientError.includes(secret),
+        `client message leaked "${secret}": ${out.clientError}`
+      );
+    }
   });
   a.s.close(); b.s.close();
 }

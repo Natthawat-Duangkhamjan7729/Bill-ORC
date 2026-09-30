@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "test:ocr": "tsx lib/ocr.test.mts",
     "test:csv": "tsx lib/csv.test.mts",
-    "test": "npm run test:ocr && npm run test:csv"
+    "test": "npm run test:ocr && npm run test:csv && npm run test:guard",
+    "test:guard": "tsx lib/ocr-guard.test.mts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

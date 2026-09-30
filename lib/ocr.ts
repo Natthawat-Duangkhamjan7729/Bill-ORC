@@ -36,6 +36,21 @@ export type Provider = {
 
 const LOCAL_HOST = /^https?:\/\/(127\.0\.0\.1|localhost|\[::1\]|0\.0\.0\.0)(:|\/|$)/;
 
+// Carries two messages: one safe to show the user, one for the server log.
+// Upstream replies, provider URLs and model names stay in `detail` only —
+// they can contain keys, internal hostnames, or raw gateway errors.
+export class OcrError extends Error {
+  constructor(
+    readonly clientMessage: string,
+    readonly detail: string
+  ) {
+    super(detail);
+    this.name = "OcrError";
+  }
+}
+
+const GENERIC_FAIL = "อ่านใบเสร็จไม่สำเร็จ กรุณาลองใหม่ หรือกรอกข้อมูลเอง";
+
 // Primary first. A provider is skipped when its base URL or model is unset,
 // so the Vercel deployment (cloud only) and a laptop running a local model
 // with a cloud safety net share the same code path.
@@ -115,13 +130,17 @@ export async function callProvider(
         : e instanceof Error
           ? e.message
           : String(e);
-    throw new Error(`${provider.label}: ติดต่อไม่ได้ (${reason})`);
+    throw new OcrError(
+      "เชื่อมต่อบริการอ่านใบเสร็จไม่ได้ กรุณาลองใหม่",
+      `${provider.label} [${provider.model}] unreachable: ${reason}`
+    );
   }
 
   if (!aiResponse.ok) {
     const detail = await aiResponse.text();
-    throw new Error(
-      `${provider.label}: ตอบกลับผิดพลาด ${aiResponse.status} ${detail.slice(0, 200)}`
+    throw new OcrError(
+      GENERIC_FAIL,
+      `${provider.label} [${provider.model}] HTTP ${aiResponse.status}: ${detail.slice(0, 300)}`
     );
   }
 
@@ -153,7 +172,10 @@ export async function callProvider(
   }
 
   if (!text) {
-    throw new Error(`${provider.label}: ตอบกลับว่างเปล่า`);
+    throw new OcrError(
+      GENERIC_FAIL,
+      `${provider.label} [${provider.model}] returned an empty reply`
+    );
   }
 
   // Models sometimes wrap JSON in ```json fences despite instructions.
@@ -166,8 +188,9 @@ export async function callProvider(
   try {
     result = JSON.parse(cleaned);
   } catch {
-    throw new Error(
-      `${provider.label}: อ่านคำตอบไม่เข้าใจ (${cleaned.slice(0, 150)})`
+    throw new OcrError(
+      GENERIC_FAIL,
+      `${provider.label} [${provider.model}] unparseable reply: ${cleaned.slice(0, 300)}`
     );
   }
 
@@ -184,7 +207,10 @@ export async function callProvider(
   // A parsed-but-empty answer is the common small-model failure and is no use
   // to anyone — treat it as a miss so the next provider gets a turn.
   if (result.total_amount == null && result.items.length === 0) {
-    throw new Error(`${provider.label}: อ่านใบเสร็จไม่ออก (ไม่พบยอดและรายการ)`);
+    throw new OcrError(
+      "อ่านใบเสร็จนี้ไม่ออก — ลองถ่ายใหม่ให้ชัดขึ้น หรือกรอกข้อมูลเอง",
+      `${provider.label} [${provider.model}] parsed but empty (no total, no items)`
+    );
   }
 
   result.source = provider.source;
@@ -192,22 +218,36 @@ export async function callProvider(
 }
 
 // Walks the provider list in order, returning the first usable read.
+// On total failure it returns a message safe to show the user plus a
+// server-only detail string naming every provider that was tried and why
+// it failed.
 export async function runOcr(
   image: string,
   providers: Provider[]
-): Promise<{ result: OcrResult } | { error: string }> {
-  const failures: string[] = [];
+): Promise<
+  { result: OcrResult } | { clientError: string; detail: string }
+> {
+  const details: string[] = [];
+  let lastClientMessage = "อ่านใบเสร็จไม่สำเร็จ กรุณาลองใหม่ หรือกรอกข้อมูลเอง";
+
   for (const provider of providers) {
     try {
       return { result: await callProvider(provider, image) };
     } catch (e) {
-      failures.push(e instanceof Error ? e.message : String(e));
+      if (e instanceof OcrError) {
+        lastClientMessage = e.clientMessage;
+        details.push(e.detail);
+      } else {
+        details.push(e instanceof Error ? e.message : String(e));
+      }
     }
   }
+
   return {
-    error:
-      failures.length > 1
-        ? `ลองทุกตัวแล้วไม่สำเร็จ — ${failures.join(" | ")}`
-        : (failures[0] ?? "ไม่มี OCR provider ที่ตั้งค่าไว้"),
+    clientError: lastClientMessage,
+    detail:
+      details.length > 0
+        ? details.join(" | ")
+        : "no OCR provider configured",
   };
 }
