@@ -1,28 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
+import { toCsvRow, csvResponse } from "@/lib/csv";
 
 export const dynamic = "force-dynamic";
-
-// Excel needs a UTF-8 byte-order mark to display Thai text correctly.
-const BOM = "\uFEFF";
-
-function escapeCsvCell(value: string | number | null | undefined): string {
-  const normalized = String(value ?? "").replace(/\r\n|\r|\n/g, "\n");
-  if (!/[",\n]/.test(normalized)) return normalized;
-  return `"${normalized.replace(/"/g, '""')}"`;
-}
-
-function toCsvRow(cells: Array<string | number | null | undefined>): string {
-  return cells.map(escapeCsvCell).join(",");
-}
-
-function csvResponse(rows: string[], filename: string): Response {
-  return new Response(BOM + rows.join("\r\n"), {
-    headers: {
-      "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="${filename}"`,
-    },
-  });
-}
 
 export async function GET(request: Request) {
   const supabase = await createClient();

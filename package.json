@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test:ocr": "tsx lib/ocr.test.mts"
+    "test:ocr": "tsx lib/ocr.test.mts",
+    "test:csv": "tsx lib/csv.test.mts",
+    "test": "npm run test:ocr && npm run test:csv"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
