@@ -2,13 +2,19 @@
 
 import { reportError, authErrorMessage } from "@/lib/errors";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { AppLogo } from "@/components/brand";
+import { IconArrowRight } from "@/components/icons";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const searchParams = useSearchParams();
+  const [mode, setMode] = useState<"login" | "signup">(
+    searchParams.get("mode") === "signup" ? "signup" : "login"
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +59,7 @@ export default function LoginPage() {
         } else {
           // Email confirmation is turned on in Supabase.
           setInfo(
-            "Account created! Check your email and click the confirmation link, then log in here."
+            "สร้างบัญชีแล้ว — เปิดอีเมลแล้วกดลิงก์ยืนยัน จากนั้นกลับมาเข้าสู่ระบบที่นี่"
           );
           setMode("login");
         }
@@ -63,83 +69,124 @@ export default function LoginPage() {
     }
   }
 
+  const isLogin = mode === "login";
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-6">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-600 text-2xl">
-        🧾
-      </div>
-      <h1 className="text-2xl font-bold tracking-tight">
-        {mode === "login" ? "Log in to Bill ORC" : "Create your account"}
-      </h1>
-
-      <form
-        onSubmit={handleSubmit}
-        className="flex w-full max-w-sm flex-col gap-4"
-      >
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-700">Email</span>
-          <input
-            type="email"
-            required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-base text-gray-900 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
-            placeholder="you@example.com"
-          />
-        </label>
-
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-700">Password</span>
-          <input
-            type="password"
-            required
-            minLength={6}
-            autoComplete={mode === "login" ? "current-password" : "new-password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-base text-gray-900 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
-            placeholder="At least 6 characters"
-          />
-        </label>
-
-        {error && (
-          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {error}
-          </p>
-        )}
-        {info && (
-          <p className="rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-sm text-teal-800">
-            {info}
-          </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="rounded-lg bg-teal-600 px-4 py-2.5 font-medium text-white transition hover:bg-teal-700 disabled:opacity-50"
+    <main className="flex min-h-screen flex-col bg-surface">
+      <div className="shell flex h-16 shrink-0 items-center">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-small text-ink-600 transition hover:text-ink-900"
         >
-          {loading
-            ? "Please wait…"
-            : mode === "login"
-              ? "Log in"
-              : "Sign up"}
-        </button>
-      </form>
+          <IconArrowRight className="h-4 w-4 rotate-180" />
+          กลับหน้าแรก
+        </Link>
+      </div>
 
-      <button
-        type="button"
-        onClick={() => {
-          setMode(mode === "login" ? "signup" : "login");
-          setError(null);
-          setInfo(null);
-        }}
-        className="text-sm text-teal-700 underline-offset-4 hover:underline"
-      >
-        {mode === "login"
-          ? "No account yet? Sign up"
-          : "Already have an account? Log in"}
-      </button>
+      <div className="flex flex-1 items-start justify-center px-5 pb-16 pt-4 sm:items-center sm:pt-0">
+        <div className="w-full max-w-md">
+          <div className="flex flex-col items-center text-center">
+            <AppLogo className="h-14 w-14" />
+            <h1 className="mt-5 text-h2 font-bold tracking-tight text-ink-900">
+              {isLogin ? "เข้าสู่ระบบ" : "สร้างบัญชีร้าน"}
+            </h1>
+            <p className="mt-2 text-small text-ink-600">
+              {isLogin
+                ? "ยินดีต้อนรับกลับมา จดบิลรออยู่แล้ว"
+                : "ใช้ฟรี เริ่มจดบิลใบแรกได้ทันที"}
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="card mt-7 p-6 sm:p-7">
+            <div>
+              <label htmlFor="email" className="label">
+                อีเมล
+              </label>
+              <input
+                id="email"
+                type="email"
+                required
+                autoComplete="email"
+                inputMode="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="field"
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div className="mt-5">
+              <label htmlFor="password" className="label">
+                รหัสผ่าน
+              </label>
+              <input
+                id="password"
+                type="password"
+                required
+                minLength={8}
+                autoComplete={isLogin ? "current-password" : "new-password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="field"
+                placeholder="อย่างน้อย 8 ตัวอักษร"
+              />
+              {!isLogin && (
+                <p className="mt-2 text-caption text-ink-450">
+                  ใช้อย่างน้อย 8 ตัวอักษร ผสมตัวเลขหรือสัญลักษณ์จะปลอดภัยขึ้น
+                </p>
+              )}
+            </div>
+
+            {error && (
+              <p
+                role="alert"
+                className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-small text-red-700"
+              >
+                {error}
+              </p>
+            )}
+            {info && (
+              <p
+                role="status"
+                className="mt-5 rounded-xl border border-brand-100 bg-brand-50 px-4 py-3 text-small text-brand-700"
+              >
+                {info}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary mt-6 w-full py-3.5"
+            >
+              {loading ? "กำลังดำเนินการ…" : isLogin ? "เข้าสู่ระบบ" : "สมัครใช้งาน"}
+            </button>
+          </form>
+
+          <p className="mt-6 text-center text-small text-ink-600">
+            {isLogin ? "ยังไม่มีบัญชี?" : "มีบัญชีอยู่แล้ว?"}{" "}
+            <button
+              type="button"
+              onClick={() => {
+                setMode(isLogin ? "signup" : "login");
+                setError(null);
+                setInfo(null);
+              }}
+              className="font-semibold text-brand-600 underline-offset-4 hover:underline"
+            >
+              {isLogin ? "สมัครใช้งาน" : "เข้าสู่ระบบ"}
+            </button>
+          </p>
+        </div>
+      </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }

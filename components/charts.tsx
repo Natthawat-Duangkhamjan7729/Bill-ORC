@@ -13,11 +13,11 @@ export function Card({
 }) {
   return (
     <section
-      className={`rounded-2xl border border-gray-200 bg-white p-5 ${className}`}
+      className={`card p-5 ${className}`}
     >
       {title && (
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="text-sm font-semibold text-gray-900">{title}</h2>
+          <h2 className="text-small font-semibold text-ink-900">{title}</h2>
           {action}
         </div>
       )}
@@ -31,7 +31,7 @@ export function StatCard({
   value,
   icon,
   tint,
-  valueClass = "text-gray-900",
+  valueClass = "text-ink-900",
   hint,
 }: {
   label: string;
@@ -42,19 +42,21 @@ export function StatCard({
   hint?: string;
 }) {
   return (
-    <div className="flex items-center gap-3.5 rounded-2xl border border-gray-200 bg-white p-4">
+    <div className="card flex items-center gap-2.5 p-4 sm:gap-3.5">
       <span
         aria-hidden
-        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-lg ${tint}`}
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-small sm:h-11 sm:w-11 sm:text-lead ${tint}`}
       >
         {icon}
       </span>
       <div className="min-w-0">
-        <p className={`truncate text-xl font-bold tracking-tight ${valueClass}`}>
+        <p
+          className={`truncate text-lead font-bold tabular-nums tracking-tight sm:text-h4 ${valueClass}`}
+        >
           {value}
         </p>
-        <p className="truncate text-xs text-gray-500">{label}</p>
-        {hint && <p className="truncate text-[11px] text-gray-400">{hint}</p>}
+        <p className="truncate text-caption text-ink-450">{label}</p>
+        {hint && <p className="text-caption text-ink-450">{hint}</p>}
       </div>
     </div>
   );
@@ -66,7 +68,7 @@ export function Legend({
   items: { color: string; label: string }[];
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-gray-600">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-caption text-ink-600">
       {items.map((item) => (
         <span key={item.label} className="flex items-center gap-1.5">
           <span
@@ -102,7 +104,7 @@ export function IncomeExpenseBars({ months }: { months: MonthPoint[] }) {
       <div className="flex gap-2">
         {/* Y axis */}
         <div
-          className="flex w-12 shrink-0 flex-col justify-between py-0 text-right text-[10px] tabular-nums"
+          className="flex w-12 shrink-0 flex-col justify-between py-0 text-right text-micro tabular-nums"
           style={{ height: "11rem", color: VIZ.muted }}
         >
           {ticks.map((t, i) => (
@@ -135,7 +137,7 @@ export function IncomeExpenseBars({ months }: { months: MonthPoint[] }) {
                 className="group relative flex h-full flex-1 items-end justify-center gap-0.5"
               >
                 {/* Tooltip on hover / focus */}
-                <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-lg bg-gray-900 px-2.5 py-1.5 text-[11px] text-white shadow-lg group-hover:block">
+                <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-lg bg-ink-900 px-2.5 py-1.5 text-caption text-white shadow-lift group-hover:block">
                   <p className="font-semibold">{month.label}</p>
                   <p>รายรับ {formatBaht(month.income)}</p>
                   <p>รายจ่าย {formatBaht(month.expense)}</p>
@@ -166,7 +168,7 @@ export function IncomeExpenseBars({ months }: { months: MonthPoint[] }) {
             {months.map((month) => (
               <span
                 key={month.key}
-                className="flex-1 truncate text-center text-[10px]"
+                className="flex-1 truncate text-center text-micro"
                 style={{ color: VIZ.muted }}
               >
                 {month.label}
@@ -227,9 +229,9 @@ export function RatioDonut({
           })}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-[10px] text-gray-500">กำไร</span>
+          <span className="text-caption text-ink-450">กำไร</span>
           <span
-            className={`text-sm font-bold tracking-tight ${profit >= 0 ? "text-teal-700" : "text-red-600"}`}
+            className={`text-small font-bold tracking-tight ${profit >= 0 ? "text-brand-700" : "text-red-600"}`}
           >
             {formatBahtShort(profit)}
           </span>
@@ -240,22 +242,22 @@ export function RatioDonut({
           are always spelled out rather than left to the swatch. */}
       <dl className="w-full text-xs">
         <div className="flex items-center justify-between gap-2 py-0.5">
-          <dt className="flex items-center gap-1.5 text-gray-600">
+          <dt className="flex items-center gap-1.5 text-ink-600">
             <span aria-hidden className="inline-block h-2.5 w-2.5 rounded-sm"
               style={{ background: VIZ.income }} />
             รายรับ
           </dt>
-          <dd className="font-medium tabular-nums text-gray-900">
+          <dd className="font-medium tabular-nums text-ink-900">
             {formatBaht(income)}
           </dd>
         </div>
         <div className="flex items-center justify-between gap-2 py-0.5">
-          <dt className="flex items-center gap-1.5 text-gray-600">
+          <dt className="flex items-center gap-1.5 text-ink-600">
             <span aria-hidden className="inline-block h-2.5 w-2.5 rounded-sm"
               style={{ background: VIZ.expense }} />
             รายจ่าย
           </dt>
-          <dd className="font-medium tabular-nums text-gray-900">
+          <dd className="font-medium tabular-nums text-ink-900">
             {formatBaht(expense)}
           </dd>
         </div>
@@ -274,7 +276,7 @@ export function RankedBars({
   emptyText: string;
 }) {
   if (rows.length === 0) {
-    return <p className="py-6 text-center text-sm text-gray-400">{emptyText}</p>;
+    return <p className="py-6 text-center text-small text-ink-450">{emptyText}</p>;
   }
   const max = Math.max(...rows.map((r) => r.total), 0);
 
@@ -286,12 +288,12 @@ export function RankedBars({
           title={`${row.name}: ${formatBaht(row.total)} (${row.count} ใบ)`}
         >
           <div className="mb-1 flex items-baseline justify-between gap-3 text-sm">
-            <span className="truncate text-gray-700">{row.name}</span>
-            <span className="shrink-0 font-medium tabular-nums text-gray-900">
+            <span className="truncate text-ink-600">{row.name}</span>
+            <span className="shrink-0 font-medium tabular-nums text-ink-900">
               {formatBaht(row.total)}
             </span>
           </div>
-          <div className="h-2 w-full rounded-full bg-gray-100">
+          <div className="h-2 w-full rounded-full bg-surface-sunken">
             <div
               className="h-2 rounded-full"
               style={{

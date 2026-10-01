@@ -189,11 +189,11 @@ export default function ReceiptForm({
   }
 
   const inputClass =
-    "w-full rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-sm text-gray-900 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200";
+    "w-full rounded-lg border border-line-strong bg-surface-raised px-2.5 py-2 text-small text-ink-900 outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/15";
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-lg border border-teal-300 bg-teal-50 px-4 py-3 text-sm text-teal-800">
+      <div className="rounded-lg border border-brand-100 bg-brand-50 px-4 py-3 text-small text-brand-700">
         {receiptId
           ? "Edit the receipt below, then save your changes."
           : "Check the extracted data below, fix anything the AI misread, then save."}
@@ -201,7 +201,7 @@ export default function ReceiptForm({
 
       <div className="grid grid-cols-2 gap-3">
         <label className="col-span-2 flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-700">Store name *</span>
+          <span className="text-small font-medium text-ink-600">Store name *</span>
           <input
             value={storeName}
             onChange={(e) => setStoreName(e.target.value)}
@@ -210,7 +210,7 @@ export default function ReceiptForm({
           />
         </label>
         <label className="col-span-2 flex flex-col gap-1 sm:col-span-1">
-          <span className="text-sm font-medium text-gray-700">Purchase date</span>
+          <span className="text-small font-medium text-ink-600">Purchase date</span>
           <input
             type="date"
             value={purchaseDate}
@@ -219,7 +219,7 @@ export default function ReceiptForm({
           />
         </label>
         <label className="col-span-2 flex flex-col gap-1 sm:col-span-1">
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-small font-medium text-ink-600">
             หมวดหมู่ (Category)
           </span>
           <select
@@ -236,7 +236,7 @@ export default function ReceiptForm({
           </select>
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-700">Subtotal</span>
+          <span className="text-small font-medium text-ink-600">Subtotal</span>
           <input
             inputMode="decimal"
             value={subtotal}
@@ -245,7 +245,7 @@ export default function ReceiptForm({
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-700">Tax</span>
+          <span className="text-small font-medium text-ink-600">Tax</span>
           <input
             inputMode="decimal"
             value={taxAmount}
@@ -254,7 +254,7 @@ export default function ReceiptForm({
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-700">Total</span>
+          <span className="text-small font-medium text-ink-600">Total</span>
           <input
             inputMode="decimal"
             value={totalAmount}
@@ -265,11 +265,11 @@ export default function ReceiptForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <span className="text-sm font-medium text-gray-700">Items</span>
+        <span className="text-small font-medium text-ink-600">Items</span>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[420px] text-sm">
+          <table className="w-full min-w-[420px] text-small">
             <thead>
-              <tr className="text-left text-xs text-gray-500">
+              <tr className="text-left text-caption text-ink-450">
                 <th className="pb-1 pr-2 font-medium">Name</th>
                 <th className="w-16 pb-1 pr-2 font-medium">Qty</th>
                 <th className="w-24 pb-1 pr-2 font-medium">Unit ฿</th>
@@ -321,7 +321,7 @@ export default function ReceiptForm({
                       onClick={() =>
                         setItems((rows) => rows.filter((_, j) => j !== i))
                       }
-                      className="text-gray-400 transition hover:text-red-600"
+                      className="text-ink-450 transition hover:text-red-600"
                       title="Remove item"
                     >
                       ✕
@@ -340,14 +340,14 @@ export default function ReceiptForm({
               { item_name: "", quantity: "1", unit_price: "", total_price: "" },
             ])
           }
-          className="self-start text-sm text-teal-700 underline-offset-4 hover:underline"
+          className="self-start text-small text-brand-700 underline-offset-4 hover:underline"
         >
           + Add item
         </button>
       </div>
 
       {error && (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-small text-red-700">
           {error}
         </p>
       )}
@@ -357,7 +357,7 @@ export default function ReceiptForm({
           type="button"
           onClick={onCancel}
           disabled={saving}
-          className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 font-medium text-gray-600 transition hover:bg-gray-50 disabled:opacity-50"
+          className="flex-1 rounded-lg border border-line-strong px-4 py-2.5 font-medium text-ink-600 transition hover:bg-surface-sunken disabled:opacity-50"
         >
           {cancelLabel ?? (receiptId ? "Cancel" : "Start over")}
         </button>
@@ -365,7 +365,7 @@ export default function ReceiptForm({
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="flex-1 rounded-lg bg-teal-600 px-4 py-2.5 font-medium text-white transition hover:bg-teal-700 disabled:opacity-50"
+          className="flex-1 rounded-lg bg-brand-600 px-4 py-2.5 font-medium text-white transition hover:bg-brand-700 disabled:opacity-50"
         >
           {saving ? "Saving…" : receiptId ? "Save changes" : "Save receipt"}
         </button>

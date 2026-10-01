@@ -102,14 +102,14 @@ export default async function SummaryPage() {
     >
       <div className="flex flex-col gap-4">
         {error && (
-          <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-small text-red-700">
             โหลดข้อมูลไม่สำเร็จ กรุณารีเฟรชหน้าอีกครั้ง
           </p>
         )}
 
         {months.length === 0 && !error && (
           <Card>
-            <p className="py-12 text-center text-gray-400">
+            <p className="py-12 text-center text-ink-450">
               ยังไม่มีใบเสร็จที่มีวันที่ — ยอดจะแสดงที่นี่เมื่อบันทึกใบเสร็จพร้อมวันที่
             </p>
           </Card>
@@ -133,7 +133,7 @@ export default async function SummaryPage() {
             />
             <StatCard
               icon="🔺"
-              tint="bg-gray-100"
+              tint="bg-line"
               label="เดือนสูงสุด"
               value={maxMonth ? formatBahtWhole(maxMonth.total) : "—"}
               hint={maxMonth?.label}
@@ -145,7 +145,7 @@ export default async function SummaryPage() {
           <Card title="รายจ่ายรวมต่อเดือน">
             <figure className="flex gap-2">
               <div
-                className="flex w-12 shrink-0 flex-col justify-between text-right text-[10px] tabular-nums"
+                className="flex w-12 shrink-0 flex-col justify-between text-right text-caption tabular-nums"
                 style={{ height: "10rem", color: VIZ.muted }}
               >
                 <span>{formatBahtShort(maxTotal)}</span>
@@ -182,13 +182,13 @@ export default async function SummaryPage() {
                         key={month.key}
                         className="group relative flex h-full flex-1 flex-col items-center justify-end"
                       >
-                        <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-lg bg-gray-900 px-2.5 py-1.5 text-[11px] text-white shadow-lg group-hover:block">
+                        <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-lg bg-ink-900 px-2.5 py-1.5 text-caption text-white shadow-lg group-hover:block">
                           <p className="font-semibold">{month.label}</p>
                           <p>{formatBaht(month.total)}</p>
                           <p>{month.count} ใบ</p>
                         </div>
                         {isLabeled && (
-                          <span className="mb-1 text-[10px] font-medium tabular-nums text-gray-700">
+                          <span className="mb-1 text-caption font-medium tabular-nums text-ink-600">
                             {formatBahtShort(month.total)}
                           </span>
                         )}
@@ -209,7 +209,7 @@ export default async function SummaryPage() {
                   {months.map((month) => (
                     <span
                       key={month.key}
-                      className="flex-1 truncate text-center text-[10px]"
+                      className="flex-1 truncate text-center text-caption"
                       style={{ color: VIZ.muted }}
                     >
                       {month.label}
@@ -238,9 +238,9 @@ export default async function SummaryPage() {
         {months.length > 0 && (
           <Card title="ตารางรายเดือน">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-small">
                 <thead>
-                  <tr className="border-b border-gray-200 text-left text-gray-500">
+                  <tr className="border-b border-line text-left text-ink-450">
                     <th className="py-2 pr-2 font-medium">เดือน</th>
                     <th className="px-2 py-2 text-right font-medium">จำนวนใบ</th>
                     <th className="py-2 pl-2 text-right font-medium">รวม</th>
@@ -248,7 +248,7 @@ export default async function SummaryPage() {
                 </thead>
                 <tbody>
                   {[...months].reverse().map((month) => (
-                    <tr key={month.key} className="border-b border-gray-100 last:border-0">
+                    <tr key={month.key} className="border-b border-line last:border-0">
                       <td className="py-2 pr-2">{month.label}</td>
                       <td className="px-2 py-2 text-right tabular-nums">
                         {month.count}

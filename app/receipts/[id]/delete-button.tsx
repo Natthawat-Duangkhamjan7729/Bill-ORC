@@ -50,7 +50,7 @@ export default function DeleteButton({
     <button
       onClick={handleDelete}
       disabled={deleting}
-      className="rounded-lg border border-red-200 px-3 py-1.5 text-sm text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+      className="rounded-lg border border-red-200 px-3 py-1.5 text-small text-red-600 transition hover:bg-red-50 disabled:opacity-50"
     >
       {deleting ? "Deleting…" : "Delete"}
     </button>

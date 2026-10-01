@@ -2,13 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  IconHome,
+  IconReceipt,
+  IconWallet,
+  IconTrend,
+  IconChart,
+} from "@/components/icons";
 
+// One source of truth for navigation. `short` is the mobile tab label —
+// Thai labels need to stay narrow at five tabs across a 360px screen.
 export const NAV_ITEMS = [
-  { href: "/dashboard", label: "ภาพรวม", icon: "◎" },
-  { href: "/receipts", label: "ใบเสร็จ", icon: "🧾" },
-  { href: "/sales", label: "ยอดขาย", icon: "💰" },
-  { href: "/profit", label: "กำไร-ขาดทุน", icon: "📈" },
-  { href: "/summary", label: "สรุปรายจ่าย", icon: "📊" },
+  { href: "/dashboard", label: "ภาพรวม", short: "ภาพรวม", Icon: IconHome },
+  { href: "/receipts", label: "ใบเสร็จ", short: "บิล", Icon: IconReceipt },
+  { href: "/sales", label: "ยอดขาย", short: "ขาย", Icon: IconWallet },
+  { href: "/profit", label: "กำไร-ขาดทุน", short: "กำไร", Icon: IconTrend },
+  { href: "/summary", label: "รายงาน", short: "รายงาน", Icon: IconChart },
 ];
 
 function isActive(pathname: string, href: string): boolean {
@@ -20,24 +29,22 @@ export function SidebarNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex flex-col gap-1">
-      {NAV_ITEMS.map((item) => {
-        const active = isActive(pathname, item.href);
+    <nav aria-label="เมนูหลัก" className="flex flex-col gap-1">
+      {NAV_ITEMS.map(({ href, label, Icon }) => {
+        const active = isActive(pathname, href);
         return (
           <Link
-            key={item.href}
-            href={item.href}
+            key={href}
+            href={href}
             aria-current={active ? "page" : undefined}
-            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${
+            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-small transition ${
               active
-                ? "bg-teal-50 font-semibold text-teal-800"
-                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                ? "bg-brand-50 font-semibold text-brand-700"
+                : "text-ink-600 hover:bg-surface-sunken hover:text-ink-900"
             }`}
           >
-            <span aria-hidden className="w-5 text-center text-base">
-              {item.icon}
-            </span>
-            {item.label}
+            <Icon className="h-5 w-5 shrink-0" />
+            {label}
           </Link>
         );
       })}
@@ -45,27 +52,35 @@ export function SidebarNav() {
   );
 }
 
-// Mobile: fixed bottom tab bar.
+// Mobile: fixed bottom tab bar. Active state is carried by colour *and*
+// weight *and* a top rule, so it never relies on colour alone.
 export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 flex border-t border-gray-200 bg-white/95 backdrop-blur lg:hidden">
-      {NAV_ITEMS.map((item) => {
-        const active = isActive(pathname, item.href);
+    <nav
+      aria-label="เมนูหลัก"
+      className="fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-surface-raised/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+    >
+      {NAV_ITEMS.map(({ href, short, Icon }) => {
+        const active = isActive(pathname, href);
         return (
           <Link
-            key={item.href}
-            href={item.href}
+            key={href}
+            href={href}
             aria-current={active ? "page" : undefined}
-            className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] transition ${
-              active ? "font-semibold text-teal-700" : "text-gray-500"
+            className={`relative flex min-h-[3.5rem] flex-1 flex-col items-center justify-center gap-1 px-1 text-micro leading-none transition ${
+              active ? "font-semibold text-brand-700" : "text-ink-450"
             }`}
           >
-            <span aria-hidden className="text-lg leading-none">
-              {item.icon}
-            </span>
-            {item.label}
+            {active && (
+              <span
+                aria-hidden
+                className="absolute inset-x-3 top-0 h-0.5 rounded-b bg-brand-600"
+              />
+            )}
+            <Icon className="h-5 w-5" />
+            {short}
           </Link>
         );
       })}
