@@ -1,17 +1,29 @@
 # Bill ORC — Receipt Tracker
 
-A web app for storing and organizing store receipts. Take a photo of a receipt
-and OCR (powered by the Claude API) automatically extracts the store name,
-purchase date, itemized purchases, and totals.
+A web app for a small shop: photograph a receipt and a vision AI model reads
+the store name, date, line items and totals out of it. Log daily sales
+alongside, and the app works out monthly profit and loss, spending by
+category, and a CSV export for your accountant. The interface is in Thai.
 
 ## Tech stack
 
-- **Next.js 14** (App Router, TypeScript) — the web framework
+- **Next.js 16** (App Router, TypeScript) — the web framework
 - **Tailwind CSS** — styling
-- **Supabase** — database (Postgres), authentication, and image storage
-- **AI vision OCR** — receipt data extraction through any OpenAI-compatible
-  chat-completions API (configured via `OCR_BASE_URL` / `OCR_MODEL` /
-  `OCR_API_KEY` in `.env.local`; works with the KKU gateway, OpenAI, etc.)
+- **Supabase** — Postgres database, authentication, and private image storage
+- **Vision AI OCR** — any OpenAI-compatible `/chat/completions` API that
+  accepts images. The provider is pure configuration (`OCR_BASE_URL` /
+  `OCR_MODEL` / `OCR_API_KEY`), so the same code runs against a model on your
+  own machine via Ollama, the KKU gateway, OpenAI, or anything else speaking
+  that shape. Nothing in the app is tied to one vendor.
+
+### Where things run
+
+| | |
+|---|---|
+| **Receipt photos** | Uploaded to a **private** Supabase Storage bucket. They are never public: the app serves them through signed URLs that expire after an hour. |
+| **Receipt data** | Supabase Postgres, with Row Level Security so an account can only ever read its own rows. |
+| **OCR — deployed site** | The Vercel deployment calls the **cloud** provider. It cannot reach a model on your PC, so "local AI" does not apply there. |
+| **OCR — local development** | `npm run dev` on your own machine can call Ollama at `127.0.0.1`, keeping photos on the device and spending no cloud quota. See *Using a local AI model* below. |
 
 ## Running the app locally
 
@@ -69,6 +81,9 @@ bucket for receipt images. It is safe to run more than once.
       ranking and recent receipts. Chart colors are validated for colorblind
       separation; every chart ships a legend, direct labels and a table view.
 - [x] Local AI OCR with automatic cloud fallback (see "Using a local AI model")
+- [x] Security hardening: patched dependencies, OCR upload/size/type limits and
+      a per-account daily cap, CSV formula-injection escaping, CSP and security
+      headers, generic error messages, CI audit + Dependabot (see "Security")
 
 ## Using a local AI model (saves cloud quota)
 
@@ -76,6 +91,12 @@ Receipt OCR can run on a model on your own machine, with the cloud API kept
 only as a safety net. The app tries the local model first and automatically
 falls back to the cloud when the local read fails, times out, or comes back
 with no total and no items.
+
+> **This applies to local development only.** "Local AI" means Ollama running
+> on your own PC at `127.0.0.1`. The deployed site on Vercel runs in a
+> datacenter and has no route to your machine, so it always uses the cloud
+> provider. To keep photos on-device you have to be scanning through
+> `npm run dev` on the machine running Ollama.
 
 ### Setup
 
@@ -110,8 +131,38 @@ Swapping is a one-line change to `OCR_MODEL` — trying all three costs nothing.
 bills often fail on a 6 GB model — those fall through to the cloud API, so
 quota is still spent on hard receipts, just not on easy ones.
 
-Run `npm run test:ocr` to check the provider/fallback logic against mock
-servers (no GPU or API key needed).
+Run `npm test` to check the provider/fallback logic, CSV building and the
+upload/quota guards against mock servers — 61 checks, no GPU or API key
+needed.
+
+## Security
+
+**Your data is scoped to your account.** Every table has Row Level Security, so
+the database itself refuses to return another account's rows — a bug in the app
+code cannot leak data across accounts. Receipt photos live in a private Storage
+bucket under a per-user folder and are served only through signed URLs that
+expire after an hour; there is no public image URL.
+
+**The OCR endpoint is rate-limited.** It requires a login, caps uploads at 4 MB
+(`OCR_MAX_BYTES`), accepts only JPEG/PNG/WebP — decided by the file's magic
+bytes, not its declared type — and allows 100 receipts per account per day
+(`OCR_DAILY_LIMIT`). The daily counter is incremented by a `SECURITY DEFINER`
+database function; the table has no write policy, so an account cannot reset
+its own counter.
+
+**Secrets.** Only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+are public by design (RLS is what protects the data). Every other key —
+including OCR provider keys — is server-side only and must never carry a
+`NEXT_PUBLIC_` prefix. Real values belong in `.env.local` (gitignored) or your
+host's environment settings, never in the repository.
+
+**Dependencies.** CI runs `npm audit --omit=dev --audit-level=high` on every
+pull request, so a new critical or high advisory in a runtime dependency fails
+the build. Dependabot opens update PRs weekly.
+
+**Reporting a problem.** If you find a security issue, please open a GitHub
+issue describing the impact — or, if it is sensitive, contact the repository
+owner directly rather than posting details publicly.
 
 ## Troubleshooting
 
@@ -121,7 +172,8 @@ servers (no GPU or API key needed).
 
 1. **Environment variables not set** on Vercel
    - Go to Vercel project → Settings → Environment Variables
-   - Ensure `OCR_API_KEY`, `OCR_BASE_URL`, and `OCR_MODEL` are all set
+   - Ensure `OCR_BASE_URL` and `OCR_MODEL` are set (`OCR_API_KEY` too, for any
+     provider that needs one — Ollama does not)
    - Redeploy after adding/updating env vars
 
 2. **Network connectivity** (geolocation/network policy)
@@ -153,15 +205,17 @@ servers (no GPU or API key needed).
 ### Deployment to Vercel
 
 1. Connect your GitHub repository to Vercel
-2. Set the **Production Branch** to `claude/receipt-ocr-app-cy20l3`
+2. Set the **Production Branch** to `main`
 3. Set **Framework Preset** to `Next.js`
 4. Add Environment Variables in Vercel project settings:
-   - `OCR_API_KEY`
-   - `OCR_BASE_URL`
-   - `OCR_MODEL`
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `OCR_BASE_URL`, `OCR_MODEL`, `OCR_API_KEY` — point these at the **cloud**
+     provider; Vercel cannot reach a model on your PC
+   - optional: `OCR_DAILY_LIMIT`, `OCR_MAX_BYTES`
 5. Redeploy if you add or update env vars
+
+Keys must **not** be prefixed `NEXT_PUBLIC_` — that prefix ships a value to the
+browser. Only the two Supabase values above are meant to be public.
 
 ### Light theme looks dark on dark-mode devices
 
