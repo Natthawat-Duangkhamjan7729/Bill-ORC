@@ -61,7 +61,7 @@ export default async function ReceiptsPage({
   );
 
   const inputClass =
-    "w-full rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-sm text-gray-900 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200";
+    "w-full rounded-lg border border-line-strong bg-surface-raised px-2.5 py-2 text-small text-ink-900 outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/15";
 
   if (error) reportError("app/receipts/page.tsx", error);
 
@@ -77,7 +77,7 @@ export default async function ReceiptsPage({
       action={
         <Link
           href="/upload"
-          className="rounded-lg bg-teal-600 px-3.5 py-2 text-sm font-medium text-white transition hover:bg-teal-700 lg:hidden"
+          className="rounded-lg bg-brand-600 px-3.5 py-2 text-small font-medium text-white transition hover:bg-brand-700 lg:hidden"
         >
           + เพิ่ม
         </Link>
@@ -88,7 +88,7 @@ export default async function ReceiptsPage({
             are shareable and the back button works. */}
         <form
           method="GET"
-          className="flex flex-col gap-2 rounded-2xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center"
+          className="flex flex-col gap-2 rounded-card border border-line bg-surface-raised p-4 sm:flex-row sm:items-center"
         >
           <input
             type="search"
@@ -105,7 +105,7 @@ export default async function ReceiptsPage({
               aria-label="ตั้งแต่วันที่"
               className={inputClass}
             />
-            <span className="text-sm text-gray-400">ถึง</span>
+            <span className="text-small text-ink-450">ถึง</span>
             <input
               type="date"
               name="to"
@@ -117,14 +117,14 @@ export default async function ReceiptsPage({
           <div className="flex gap-2">
             <button
               type="submit"
-              className="flex-1 rounded-lg border border-teal-600 px-3 py-2 text-sm font-medium text-teal-700 transition hover:bg-teal-50 sm:flex-none"
+              className="flex-1 rounded-lg border border-brand-600 px-3 py-2 text-small font-medium text-brand-700 transition hover:bg-brand-50 sm:flex-none"
             >
               ค้นหา
             </button>
             {hasFilter && (
               <Link
                 href="/receipts"
-                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-center text-sm text-gray-600 transition hover:bg-gray-50 sm:flex-none"
+                className="flex-1 rounded-lg border border-line-strong px-3 py-2 text-center text-small text-ink-600 transition hover:bg-surface-sunken sm:flex-none"
               >
                 ล้าง
               </Link>
@@ -133,14 +133,14 @@ export default async function ReceiptsPage({
         </form>
 
         {error && (
-          <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-small text-red-700">
             โหลดใบเสร็จไม่สำเร็จ กรุณารีเฟรชหน้าอีกครั้ง
           </p>
         )}
 
         {receipts && receipts.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-gray-300 bg-white px-4 py-14 text-center">
-            <p className="text-gray-400">
+          <div className="rounded-card border border-dashed border-line-strong bg-surface-raised px-4 py-14 text-center">
+            <p className="text-ink-450">
               {hasFilter
                 ? "ไม่พบใบเสร็จที่ตรงกับการค้นหา"
                 : "ยังไม่มีใบเสร็จ — เพิ่มใบแรกได้เลย!"}
@@ -150,19 +150,19 @@ export default async function ReceiptsPage({
 
         {receipts && receipts.length > 0 && (
           <>
-            <div className="flex items-center justify-end gap-3 text-sm">
-              <span className="text-gray-400">ดาวน์โหลด:</span>
+            <div className="flex items-center justify-end gap-3 text-small">
+              <span className="text-ink-450">ดาวน์โหลด:</span>
               <a
                 href={`/api/export?${exportQuery}`}
                 download
-                className="text-teal-700 hover:underline"
+                className="text-brand-700 hover:underline"
               >
                 ⬇ ใบเสร็จ CSV
               </a>
               <a
                 href={`/api/export?type=items${exportQuery ? `&${exportQuery}` : ""}`}
                 download
-                className="text-teal-700 hover:underline"
+                className="text-brand-700 hover:underline"
               >
                 ⬇ รายสินค้า CSV
               </a>
@@ -173,22 +173,22 @@ export default async function ReceiptsPage({
                 <li key={receipt.id}>
                   <Link
                     href={`/receipts/${receipt.id}`}
-                    className="flex items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 transition hover:border-teal-400 hover:bg-teal-50/40"
+                    className="flex items-center justify-between gap-3 rounded-card border border-line bg-surface-raised px-4 py-3 transition hover:border-brand-600 hover:bg-brand-50/40"
                   >
                     <div className="min-w-0">
-                      <p className="truncate font-medium text-gray-900">
+                      <p className="truncate font-medium text-ink-900">
                         {receipt.store_name ?? "ไม่ระบุร้าน"}
                       </p>
-                      <p className="flex items-center gap-2 text-sm text-gray-500">
+                      <p className="flex items-center gap-2 text-small text-ink-450">
                         {formatDate(receipt.purchase_date)}
                         {receipt.category && (
-                          <span className="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700">
+                          <span className="rounded-full bg-brand-50 px-2 py-0.5 text-caption font-medium text-brand-700">
                             {receipt.category}
                           </span>
                         )}
                       </p>
                     </div>
-                    <p className="shrink-0 font-semibold tabular-nums text-gray-900">
+                    <p className="shrink-0 font-semibold tabular-nums text-ink-900">
                       {receipt.total_amount == null
                         ? "—"
                         : formatBaht(Number(receipt.total_amount))}

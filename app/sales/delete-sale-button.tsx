@@ -31,7 +31,7 @@ export default function DeleteSaleButton({ saleId }: { saleId: string }) {
     <button
       onClick={handleDelete}
       disabled={deleting}
-      className="text-gray-400 transition hover:text-red-600 disabled:opacity-50"
+      className="text-ink-450 transition hover:text-red-600 disabled:opacity-50"
       title="ลบรายการ"
     >
       ✕

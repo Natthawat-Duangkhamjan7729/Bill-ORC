@@ -70,7 +70,7 @@ export default async function ProfitPage() {
     >
       <div className="flex flex-col gap-4">
         {loadError && (
-          <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-small text-red-700">
             โหลดข้อมูลไม่สำเร็จ กรุณารีเฟรชหน้าอีกครั้ง
           </p>
         )}
@@ -78,7 +78,7 @@ export default async function ProfitPage() {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <StatCard
             icon="💰"
-            tint="bg-teal-50"
+            tint="bg-brand-50"
             label="รายรับเดือนนี้"
             value={formatBahtWhole(income)}
           />
@@ -90,16 +90,16 @@ export default async function ProfitPage() {
           />
           <StatCard
             icon={profit >= 0 ? "📈" : "📉"}
-            tint={profit >= 0 ? "bg-teal-50" : "bg-red-50"}
+            tint={profit >= 0 ? "bg-brand-50" : "bg-red-50"}
             label="กำไรเดือนนี้"
             value={formatBahtWhole(profit)}
-            valueClass={profit >= 0 ? "text-teal-700" : "text-red-600"}
+            valueClass={profit >= 0 ? "text-brand-700" : "text-red-600"}
           />
         </div>
 
         {months.length === 0 && !loadError && (
           <Card>
-            <p className="py-12 text-center text-gray-400">
+            <p className="py-12 text-center text-ink-450">
               ยังไม่มีข้อมูล — บันทึกยอดขายและใบเสร็จก่อน
               แล้วกำไร-ขาดทุนจะแสดงที่นี่
             </p>
@@ -115,9 +115,9 @@ export default async function ProfitPage() {
         {months.length > 0 && (
           <Card title="ตารางรายเดือน">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-small">
                 <thead>
-                  <tr className="border-b border-gray-200 text-left text-gray-500">
+                  <tr className="border-b border-line text-left text-ink-450">
                     <th className="py-2 pr-2 font-medium">เดือน</th>
                     <th className="px-2 py-2 text-right font-medium">รายรับ</th>
                     <th className="px-2 py-2 text-right font-medium">รายจ่าย</th>
@@ -128,7 +128,7 @@ export default async function ProfitPage() {
                   {[...months].reverse().map((month) => {
                     const rowProfit = month.income - month.expense;
                     return (
-                      <tr key={month.key} className="border-b border-gray-100 last:border-0">
+                      <tr key={month.key} className="border-b border-line last:border-0">
                         <td className="py-2 pr-2">{month.label}</td>
                         <td className="px-2 py-2 text-right tabular-nums">
                           {formatBaht(month.income)}
@@ -137,7 +137,7 @@ export default async function ProfitPage() {
                           {formatBaht(month.expense)}
                         </td>
                         <td
-                          className={`py-2 pl-2 text-right font-medium tabular-nums ${rowProfit >= 0 ? "text-teal-700" : "text-red-600"}`}
+                          className={`py-2 pl-2 text-right font-medium tabular-nums ${rowProfit >= 0 ? "text-brand-700" : "text-red-600"}`}
                         >
                           {formatBaht(rowProfit)}
                         </td>
@@ -150,7 +150,7 @@ export default async function ProfitPage() {
           </Card>
         )}
 
-        <p className="text-xs text-gray-400">
+        <p className="text-caption text-ink-450">
           รายรับมาจากหน้า &quot;ยอดขาย&quot; และรายจ่ายมาจากใบเสร็จที่สแกนไว้
           (นับเฉพาะใบที่มีวันที่และยอดรวม)
         </p>

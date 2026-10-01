@@ -2,22 +2,91 @@
 @tailwind components;
 @tailwind utilities;
 
-/* The app is designed light-only for now. "color-scheme: light" also keeps
-   native controls (date picker, scrollbars) light on dark-mode devices. */
+/* Light-only by design: shop owners use this in daylight and on mixed
+   devices, and a forced dark repaint made Thai text unreadable before.
+   "color-scheme: light" also keeps native date pickers and scrollbars light. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
   color-scheme: light;
+  --background: #fbfbf9;
+  --foreground: #14171a;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI",
+    sans-serif;
+  /* Thai needs a little more leading than Latin at the same size. */
+  line-height: 1.65;
+}
+
+@layer components {
+  /* Buttons — one shape language across the whole app. */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-pill px-5 py-3
+           text-small font-semibold transition
+           focus-visible:outline focus-visible:outline-2
+           focus-visible:outline-offset-2 focus-visible:outline-brand-600
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-brand-600 text-white hover:bg-brand-700;
+  }
+  .btn-secondary {
+    @apply btn border border-line-strong bg-surface-raised text-ink-900
+           hover:border-ink-450 hover:bg-surface-sunken;
+  }
+  .btn-ghost {
+    @apply btn text-ink-600 hover:bg-surface-sunken hover:text-ink-900;
+  }
+  /* On the dark hero, the secondary button needs its own treatment. */
+  .btn-on-dark {
+    @apply btn border border-white/25 text-white hover:border-white/50
+           hover:bg-white/10 focus-visible:outline-white;
+  }
+
+  .card {
+    @apply rounded-card border border-line bg-surface-raised;
+  }
+
+  .field {
+    @apply w-full rounded-xl border border-line-strong bg-surface-raised px-4 py-3
+           text-body text-ink-900 placeholder:text-ink-450
+           focus:border-brand-600 focus:outline-none focus:ring-4
+           focus:ring-brand-600/15;
+  }
+
+  .label {
+    @apply mb-2 block text-small font-medium text-ink-900;
+  }
+
+  /* Section wrapper: one horizontal gutter rule for the entire app. */
+  .shell {
+    @apply mx-auto w-full max-w-shell px-5 sm:px-8;
+  }
+
+  .eyebrow {
+    @apply text-caption font-semibold uppercase tracking-[0.12em] text-brand-600;
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+/* Respect users who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

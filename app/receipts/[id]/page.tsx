@@ -73,7 +73,7 @@ export default async function ReceiptDetailPage({
         <>
           <Link
             href={`/receipts/${receipt.id}/edit`}
-            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 transition hover:bg-gray-50"
+            className="rounded-lg border border-line-strong px-3 py-1.5 text-small text-ink-600 transition hover:bg-surface-sunken"
           >
             แก้ไข
           </Link>
@@ -82,13 +82,13 @@ export default async function ReceiptDetailPage({
       }
     >
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
-      <Link href="/receipts" className="text-sm text-teal-700 hover:underline">
+      <Link href="/receipts" className="text-small text-brand-700 hover:underline">
         ← กลับไปหน้าใบเสร็จ
       </Link>
 
       {imageUrl ? (
-        <details className="rounded-2xl border border-gray-200 bg-white">
-          <summary className="cursor-pointer px-4 py-3 text-sm text-gray-600">
+        <details className="rounded-card border border-line bg-surface-raised">
+          <summary className="cursor-pointer px-4 py-3 text-small text-ink-600">
             📷 ดูรูปใบเสร็จ
           </summary>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -99,15 +99,15 @@ export default async function ReceiptDetailPage({
           />
         </details>
       ) : (
-        <p className="rounded-2xl border border-dashed border-gray-300 bg-white px-4 py-3 text-center text-sm text-gray-400">
+        <p className="rounded-card border border-dashed border-line-strong bg-surface-raised px-4 py-3 text-center text-small text-ink-450">
           ไม่มีรูปสำหรับใบเสร็จนี้
         </p>
       )}
 
-      <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white">
-        <table className="w-full text-sm">
+      <div className="overflow-x-auto rounded-card border border-line bg-surface-raised">
+        <table className="w-full text-small">
           <thead>
-            <tr className="border-b border-gray-200 bg-gray-50 text-left text-gray-500">
+            <tr className="border-b border-line bg-surface-sunken text-left text-ink-450">
               <th className="px-4 py-2 font-medium">รายการ</th>
               <th className="px-2 py-2 text-right font-medium">จำนวน</th>
               <th className="px-2 py-2 text-right font-medium">ราคา/หน่วย</th>
@@ -117,13 +117,13 @@ export default async function ReceiptDetailPage({
           <tbody>
             {(items ?? []).length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-gray-400">
+                <td colSpan={4} className="px-4 py-6 text-center text-ink-450">
                   ไม่มีรายการสินค้า
                 </td>
               </tr>
             )}
             {(items ?? []).map((item) => (
-              <tr key={item.id} className="border-b border-gray-100">
+              <tr key={item.id} className="border-b border-line">
                 <td className="px-4 py-2">{item.item_name}</td>
                 <td className="px-2 py-2 text-right">{item.quantity}</td>
                 <td className="px-2 py-2 text-right">
@@ -135,9 +135,9 @@ export default async function ReceiptDetailPage({
               </tr>
             ))}
           </tbody>
-          <tfoot className="text-sm">
+          <tfoot className="text-small">
             <tr>
-              <td colSpan={3} className="px-4 py-1.5 pt-3 text-right text-gray-500">
+              <td colSpan={3} className="px-4 py-1.5 pt-3 text-right text-ink-450">
                 ยอดก่อนภาษี
               </td>
               <td className="px-4 py-1.5 pt-3 text-right">
@@ -145,7 +145,7 @@ export default async function ReceiptDetailPage({
               </td>
             </tr>
             <tr>
-              <td colSpan={3} className="px-4 py-1.5 text-right text-gray-500">
+              <td colSpan={3} className="px-4 py-1.5 text-right text-ink-450">
                 ภาษี
               </td>
               <td className="px-4 py-1.5 text-right">

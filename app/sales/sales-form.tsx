@@ -70,13 +70,13 @@ export default function SalesForm() {
   }
 
   const inputClass =
-    "w-full rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-sm text-gray-900 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200";
+    "w-full rounded-lg border border-line-strong bg-surface-raised px-2.5 py-2 text-small text-ink-900 outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/15";
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-gray-200 p-4">
+    <div className="flex flex-col gap-3 rounded-xl border border-line p-4">
       <div className="grid grid-cols-2 gap-3">
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-700">วันที่</span>
+          <span className="text-small font-medium text-ink-600">วันที่</span>
           <input
             type="date"
             value={saleDate}
@@ -85,7 +85,7 @@ export default function SalesForm() {
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-700">ยอดขาย (฿) *</span>
+          <span className="text-small font-medium text-ink-600">ยอดขาย (฿) *</span>
           <input
             inputMode="decimal"
             value={amount}
@@ -95,7 +95,7 @@ export default function SalesForm() {
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-700">ช่องทาง</span>
+          <span className="text-small font-medium text-ink-600">ช่องทาง</span>
           <select
             value={channel}
             onChange={(e) => setChannel(e.target.value)}
@@ -109,7 +109,7 @@ export default function SalesForm() {
           </select>
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-700">โน้ต</span>
+          <span className="text-small font-medium text-ink-600">โน้ต</span>
           <input
             value={note}
             onChange={(e) => setNote(e.target.value)}
@@ -120,7 +120,7 @@ export default function SalesForm() {
       </div>
 
       {error && (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-small text-red-700">
           {error}
         </p>
       )}
@@ -129,7 +129,7 @@ export default function SalesForm() {
         type="button"
         onClick={handleSave}
         disabled={saving}
-        className="rounded-lg bg-teal-600 px-4 py-2.5 font-medium text-white transition hover:bg-teal-700 disabled:opacity-50"
+        className="rounded-lg bg-brand-600 px-4 py-2.5 font-medium text-white transition hover:bg-brand-700 disabled:opacity-50"
       >
         {saving ? "กำลังบันทึก…" : "บันทึกยอดขาย"}
       </button>

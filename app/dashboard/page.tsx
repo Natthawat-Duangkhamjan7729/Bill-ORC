@@ -104,7 +104,7 @@ export default async function DashboardPage() {
       action={
         <Link
           href="/upload"
-          className="rounded-lg bg-teal-600 px-3.5 py-2 text-sm font-medium text-white transition hover:bg-teal-700 lg:hidden"
+          className="rounded-lg bg-brand-600 px-3.5 py-2 text-small font-medium text-white transition hover:bg-brand-700 lg:hidden"
         >
           + เพิ่ม
         </Link>
@@ -112,7 +112,7 @@ export default async function DashboardPage() {
     >
       <div className="flex flex-col gap-4">
         {loadError && (
-          <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-small text-red-700">
             โหลดข้อมูลไม่สำเร็จ กรุณารีเฟรชหน้าอีกครั้ง
           </p>
         )}
@@ -121,7 +121,7 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
           <StatCard
             icon="💰"
-            tint="bg-teal-50"
+            tint="bg-brand-50"
             label="รายรับ"
             value={formatBahtWhole(income)}
           />
@@ -133,10 +133,10 @@ export default async function DashboardPage() {
           />
           <StatCard
             icon={profit >= 0 ? "📈" : "📉"}
-            tint={profit >= 0 ? "bg-teal-50" : "bg-red-50"}
+            tint={profit >= 0 ? "bg-brand-50" : "bg-red-50"}
             label="กำไร"
             value={formatBahtWhole(profit)}
-            valueClass={profit >= 0 ? "text-teal-700" : "text-red-600"}
+            valueClass={profit >= 0 ? "text-brand-700" : "text-red-600"}
           />
           <StatCard
             icon="📂"
@@ -151,21 +151,21 @@ export default async function DashboardPage() {
           <Card>
             <div className="flex flex-col items-center gap-4 py-10 text-center">
               <span className="text-4xl">👋</span>
-              <p className="font-medium text-gray-900">ยังไม่มีข้อมูล</p>
-              <p className="max-w-sm text-sm text-gray-500">
+              <p className="font-medium text-ink-900">ยังไม่มีข้อมูล</p>
+              <p className="max-w-sm text-small text-ink-450">
                 เริ่มจากสแกนใบเสร็จ แล้วบันทึกยอดขายประจำวัน
                 จากนั้นกราฟกำไร-ขาดทุนจะขึ้นที่นี่
               </p>
               <div className="flex gap-2">
                 <Link
                   href="/upload"
-                  className="rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-teal-700"
+                  className="rounded-lg bg-brand-600 px-4 py-2.5 text-small font-medium text-white transition hover:bg-brand-700"
                 >
                   สแกนใบเสร็จ
                 </Link>
                 <Link
                   href="/sales"
-                  className="rounded-lg border border-teal-600 px-4 py-2.5 text-sm font-medium text-teal-700 transition hover:bg-teal-50"
+                  className="rounded-lg border border-brand-600 px-4 py-2.5 text-small font-medium text-brand-700 transition hover:bg-brand-50"
                 >
                   บันทึกยอดขาย
                 </Link>
@@ -182,7 +182,7 @@ export default async function DashboardPage() {
               action={
                 <Link
                   href="/profit"
-                  className="text-xs text-teal-700 hover:underline"
+                  className="text-caption text-brand-700 hover:underline"
                 >
                   ดูทั้งหมด →
                 </Link>
@@ -205,7 +205,7 @@ export default async function DashboardPage() {
               action={
                 <Link
                   href="/summary"
-                  className="text-xs text-teal-700 hover:underline"
+                  className="text-caption text-brand-700 hover:underline"
                 >
                   ดูทั้งหมด →
                 </Link>
@@ -222,34 +222,34 @@ export default async function DashboardPage() {
               action={
                 <Link
                   href="/receipts"
-                  className="text-xs text-teal-700 hover:underline"
+                  className="text-caption text-brand-700 hover:underline"
                 >
                   ดูทั้งหมด →
                 </Link>
               }
             >
               {recent.length === 0 ? (
-                <p className="py-6 text-center text-sm text-gray-400">
+                <p className="py-6 text-center text-small text-ink-450">
                   ยังไม่มีใบเสร็จ
                 </p>
               ) : (
                 <ul className="flex flex-col">
                   {recent.map((receipt) => (
-                    <li key={receipt.id} className="border-b border-gray-100 last:border-0">
+                    <li key={receipt.id} className="border-b border-line last:border-0">
                       <Link
                         href={`/receipts/${receipt.id}`}
                         className="flex items-center justify-between gap-3 py-2.5 transition hover:opacity-70"
                       >
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-gray-900">
+                          <p className="truncate text-small font-medium text-ink-900">
                             {receipt.store_name ?? "ไม่ระบุร้าน"}
                           </p>
-                          <p className="truncate text-xs text-gray-500">
+                          <p className="truncate text-caption text-ink-450">
                             {formatDate(receipt.purchase_date)}
                             {receipt.category ? ` · ${receipt.category}` : ""}
                           </p>
                         </div>
-                        <span className="shrink-0 text-sm font-semibold tabular-nums text-gray-900">
+                        <span className="shrink-0 text-small font-semibold tabular-nums text-ink-900">
                           {receipt.total_amount == null
                             ? "—"
                             : formatBaht(Number(receipt.total_amount))}
