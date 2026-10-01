@@ -1,5 +1,7 @@
 "use client";
 
+import { reportError } from "@/lib/errors";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -29,7 +31,8 @@ export default function DeleteButton({
       .eq("id", receiptId);
 
     if (error) {
-      alert(`Could not delete: ${error.message}`);
+      reportError("receipt.delete", error);
+      alert("ลบไม่สำเร็จ กรุณาลองใหม่");
       setDeleting(false);
       return;
     }

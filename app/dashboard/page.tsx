@@ -1,3 +1,4 @@
+import { reportError } from "@/lib/errors";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -93,6 +94,8 @@ export default async function DashboardPage() {
   const recent = receipts.slice(0, 5);
   const hasAnyData = months.length > 0;
 
+  if (loadError) reportError("app/dashboard/page.tsx", loadError);
+
   return (
     <AppShell
       title="ภาพรวม"
@@ -110,7 +113,7 @@ export default async function DashboardPage() {
       <div className="flex flex-col gap-4">
         {loadError && (
           <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            โหลดข้อมูลไม่สำเร็จ: {loadError.message}
+            โหลดข้อมูลไม่สำเร็จ กรุณารีเฟรชหน้าอีกครั้ง
           </p>
         )}
 

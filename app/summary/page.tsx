@@ -1,3 +1,4 @@
+import { reportError } from "@/lib/errors";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import AppShell from "@/components/app-shell";
@@ -91,6 +92,8 @@ export default async function SummaryPage() {
   );
   const grandTotal = months.reduce((sum, m) => sum + m.total, 0);
 
+  if (error) reportError("app/summary/page.tsx", error);
+
   return (
     <AppShell
       title="สรุปรายจ่าย"
@@ -100,7 +103,7 @@ export default async function SummaryPage() {
       <div className="flex flex-col gap-4">
         {error && (
           <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            โหลดข้อมูลไม่สำเร็จ: {error.message}
+            โหลดข้อมูลไม่สำเร็จ กรุณารีเฟรชหน้าอีกครั้ง
           </p>
         )}
 

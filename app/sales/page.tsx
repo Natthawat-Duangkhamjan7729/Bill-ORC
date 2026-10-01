@@ -1,3 +1,4 @@
+import { reportError } from "@/lib/errors";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import AppShell from "@/components/app-shell";
@@ -41,6 +42,8 @@ export default async function SalesPage() {
     .filter((s) => s.sale_date === todayKey)
     .reduce((sum, s) => sum + Number(s.amount), 0);
 
+  if (error) reportError("app/sales/page.tsx", error);
+
   return (
     <AppShell title="ยอดขาย" subtitle="บันทึกรายรับประจำวัน" email={user.email}>
       <div className="flex flex-col gap-4">
@@ -76,7 +79,7 @@ export default async function SalesPage() {
 
         {error && (
           <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            โหลดข้อมูลไม่สำเร็จ: {error.message}
+            โหลดข้อมูลไม่สำเร็จ กรุณารีเฟรชหน้าอีกครั้ง
           </p>
         )}
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { reportError } from "@/lib/errors";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -106,7 +108,8 @@ export default function ReceiptForm({
           .update(fields)
           .eq("id", receiptId);
         if (updateError) {
-          setError(`Could not save changes: ${updateError.message}`);
+          reportError("receipt-form.update", updateError);
+          setError("บันทึกการแก้ไขไม่สำเร็จ กรุณาลองใหม่");
           return;
         }
 
@@ -116,7 +119,8 @@ export default function ReceiptForm({
           .delete()
           .eq("receipt_id", receiptId);
         if (clearError) {
-          setError(`Could not update items: ${clearError.message}`);
+          reportError("receipt-form.clear-items", clearError);
+          setError("อัปเดตรายการสินค้าไม่สำเร็จ กรุณาลองใหม่");
           return;
         }
         savedReceiptId = receiptId;
@@ -132,7 +136,8 @@ export default function ReceiptForm({
           .from("receipts")
           .upload(imagePath, imageBlob, { contentType: "image/jpeg" });
         if (uploadError) {
-          setError(`Could not upload the image: ${uploadError.message}`);
+          reportError("receipt-form.upload", uploadError);
+          setError("อัปโหลดรูปไม่สำเร็จ กรุณาลองใหม่");
           return;
         }
 
@@ -142,7 +147,8 @@ export default function ReceiptForm({
           .select("id")
           .single();
         if (receiptError) {
-          setError(`Could not save the receipt: ${receiptError.message}`);
+          reportError("receipt-form.insert", receiptError);
+          setError("บันทึกใบเสร็จไม่สำเร็จ กรุณาลองใหม่");
           return;
         }
         savedReceiptId = receipt.id;
@@ -163,8 +169,9 @@ export default function ReceiptForm({
           .from("receipt_items")
           .insert(itemRows);
         if (itemsError) {
+          reportError("receipt-form.insert-items", itemsError);
           setError(
-            `Receipt saved, but items failed: ${itemsError.message}. Please try saving again.`
+            "บันทึกใบเสร็จแล้ว แต่รายการสินค้าไม่สำเร็จ — กรุณากดบันทึกอีกครั้ง"
           );
           return;
         }

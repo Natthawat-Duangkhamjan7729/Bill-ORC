@@ -1,5 +1,7 @@
 "use client";
 
+import { reportError } from "@/lib/errors";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -17,7 +19,8 @@ export default function DeleteSaleButton({ saleId }: { saleId: string }) {
     const supabase = createClient();
     const { error } = await supabase.from("sales").delete().eq("id", saleId);
     if (error) {
-      alert(`ลบไม่สำเร็จ: ${error.message}`);
+      reportError("sales.delete", error);
+      alert("ลบไม่สำเร็จ กรุณาลองใหม่");
       setDeleting(false);
       return;
     }

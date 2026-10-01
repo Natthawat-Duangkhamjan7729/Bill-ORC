@@ -128,3 +128,59 @@ create policy "Users delete own receipt images"
     bucket_id = 'receipts'
     and auth.uid()::text = (storage.foldername(name))[1]
   );
+
+-- ============================================================
+-- 4. OCR daily usage counter
+--    Caps how many receipts one account can send to the AI per
+--    day. The table has NO insert/update policy on purpose: only
+--    the SECURITY DEFINER function below may write it, so a user
+--    cannot reset their own counter with the anon key.
+-- ============================================================
+
+create table if not exists public.ocr_usage (
+  user_id uuid not null references auth.users (id) on delete cascade,
+  day date not null,
+  count integer not null default 0,
+  primary key (user_id, day)
+);
+
+alter table public.ocr_usage enable row level security;
+
+-- Read-only: lets the app show "used X of Y today" if we ever want to.
+drop policy if exists "Users read own ocr usage" on public.ocr_usage;
+create policy "Users read own ocr usage"
+  on public.ocr_usage
+  for select
+  using (auth.uid() = user_id);
+
+-- Atomically bumps today's counter and returns the new total.
+-- The day boundary follows Thai local time, so "today" matches the shop's day.
+create or replace function public.claim_ocr_quota()
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := auth.uid();
+  today date := (now() at time zone 'Asia/Bangkok')::date;
+  new_count integer;
+begin
+  if uid is null then
+    raise exception 'not authenticated';
+  end if;
+
+  insert into public.ocr_usage as u (user_id, day, count)
+  values (uid, today, 1)
+  on conflict (user_id, day)
+    do update set count = u.count + 1
+  returning u.count into new_count;
+
+  return new_count;
+end;
+$$;
+
+-- Only signed-in users may call it, and it takes no arguments, so the limit
+-- itself is decided by the server route and cannot be influenced by callers.
+revoke all on function public.claim_ocr_quota() from public;
+grant execute on function public.claim_ocr_quota() to authenticated;

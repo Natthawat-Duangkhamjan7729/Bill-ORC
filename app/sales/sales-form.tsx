@@ -1,5 +1,7 @@
 "use client";
 
+import { reportError } from "@/lib/errors";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -53,7 +55,8 @@ export default function SalesForm() {
         note: note.trim() || null,
       });
       if (insertError) {
-        setError(`บันทึกไม่สำเร็จ: ${insertError.message}`);
+        reportError("sales-form.insert", insertError);
+        setError("บันทึกไม่สำเร็จ กรุณาลองใหม่");
         return;
       }
 

@@ -1,3 +1,4 @@
+import { reportError } from "@/lib/errors";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import AppShell from "@/components/app-shell";
@@ -59,6 +60,8 @@ export default async function ProfitPage() {
   const expense = current?.expense ?? 0;
   const profit = income - expense;
 
+  if (loadError) reportError("app/profit/page.tsx", loadError);
+
   return (
     <AppShell
       title="กำไร-ขาดทุน"
@@ -68,7 +71,7 @@ export default async function ProfitPage() {
       <div className="flex flex-col gap-4">
         {loadError && (
           <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            โหลดข้อมูลไม่สำเร็จ: {loadError.message}
+            โหลดข้อมูลไม่สำเร็จ กรุณารีเฟรชหน้าอีกครั้ง
           </p>
         )}
 
